@@ -1,0 +1,44 @@
+{
+  "seed": 42,
+  "replications": 20,
+  "day_minutes": 480,
+  "entity_count": 100,
+  "entity_class_mix": {
+    "high": 0.30,
+    "medium": 0.40,
+    "low": 0.30
+  },
+  "cloud_update_ratio": 0.40,
+  "display_update_share": 0.70,
+  "scenarios": {
+    "fleet_size": [2, 5, 10],
+    "connectivity": [
+      {
+        "name": "good",
+        "online_probability": 0.90,
+        "mean_outage_minutes": 5
+      },
+      {
+        "name": "moderate",
+        "online_probability": 0.70,
+        "mean_outage_minutes": 20
+      },
+      {
+        "name": "poor",
+        "online_probability": 0.50,
+        "mean_outage_minutes": 60
+      }
+    ],
+    "sync_interval_minutes": [1, 5, 15],
+    "updates_per_display_day": [2, 8, 20],
+    "conflict_bias": [0.01, 0.05, 0.10],
+    "high_risk_update_share": [0.15, 0.30, 0.50]
+  },
+  "policies": [
+    "last_write_wins",
+    "cloud_preferred",
+    "display_preferred",
+    "manual_review_all",
+    "domain_aware"
+  ]
+}
