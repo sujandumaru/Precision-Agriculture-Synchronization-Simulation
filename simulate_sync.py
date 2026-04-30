@@ -36,6 +36,12 @@ class Event:
     entity_class: str
 
 
+@dataclass(frozen=True)
+class SimulationRealization:
+    events: list[Event]
+    connectivity: list[list[bool]]
+
+
 def read_config(path: Path) -> dict:
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
@@ -153,6 +159,25 @@ def generate_connectivity(
     return all_states
 
 
+def generate_realization(
+    rng: random.Random,
+    scenario: Scenario,
+    entity_classes: list[str],
+    config: dict,
+) -> SimulationRealization:
+    day_minutes = int(config["day_minutes"])
+    return SimulationRealization(
+        events=generate_events(
+            rng,
+            scenario,
+            entity_classes,
+            day_minutes,
+            float(config["cloud_update_ratio"]),
+        ),
+        connectivity=generate_connectivity(rng, scenario, day_minutes),
+    )
+
+
 def scenario_grid(config: dict) -> list[Scenario]:
     scenarios = config["scenarios"]
     connectivity = [
@@ -190,9 +215,20 @@ def main() -> None:
     args = parser.parse_args()
 
     config = read_config(args.config)
-
-    entity_classes = build_entities(int(config["entity_count"]), config["entity_class_mix"])
+    root_rng = random.Random(int(config["seed"]))
     scenarios = scenario_grid(config)
+    replications = int(config["replications"])
+
+    for scenario_index, scenario in enumerate(scenarios):
+        entity_classes = build_entities(int(config["entity_count"]), config["entity_class_mix"])
+        for replication in range(replications):
+            run_seed = root_rng.randrange(1_000_000_000)
+            realization = generate_realization(
+                random.Random(run_seed),
+                scenario,
+                entity_classes,
+                config,
+            )
 
 
 if __name__ == "__main__":
