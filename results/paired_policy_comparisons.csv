@@ -1,0 +1,4 @@
+baseline_policy,comparison_policy,metric,paired_runs,baseline_mean,comparison_mean,baseline_minus_comparison_mean,baseline_minus_comparison_ci95,percent_reduction
+last_write_wins,domain_aware,high_risk_silent_overwrites,14580,0.771811,0.0,0.771811,0.037498,100.0
+last_write_wins,domain_aware,silent_overwrites,14580,2.197119,1.425309,0.771811,0.037498,35.13
+manual_review_all,domain_aware,manual_reviews,14580,2.186351,0.768244,1.418107,0.057775,64.86

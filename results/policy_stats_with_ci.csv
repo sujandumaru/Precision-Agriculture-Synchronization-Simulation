@@ -1,0 +1,6 @@
+policy,label,runs,conflicts_mean,conflicts_ci95,silent_overwrites_mean,silent_overwrites_ci95,high_risk_silent_overwrites_mean,high_risk_silent_overwrites_ci95,manual_reviews_mean,manual_reviews_ci95,high_risk_manual_reviews_mean,high_risk_manual_reviews_ci95,local_superseded_updates_mean,local_superseded_updates_ci95,stale_ratio_mean,stale_ratio_ci95
+last_write_wins,Last-write-wins,14580,2.197119,0.082316,2.197119,0.082316,0.771811,0.037498,0.0,0.0,0.0,0.0,0.330316,0.014038,0.021174,0.000494
+cloud_preferred,Cloud-preferred,14580,2.186351,0.081681,2.186351,0.081681,0.768244,0.037215,0.0,0.0,0.0,0.0,0.330316,0.014038,0.021093,0.000491
+display_preferred,Display-preferred,14580,2.239918,0.084647,2.239918,0.084647,0.7893,0.038823,0.0,0.0,0.0,0.0,0.330316,0.014038,0.021455,0.000505
+manual_review_all,Manual review all,14580,2.186351,0.081681,0.0,0.0,0.0,0.0,2.186351,0.081681,0.768244,0.037215,0.330316,0.014038,0.021093,0.000491
+domain_aware,Domain-aware,14580,2.193553,0.082113,1.425309,0.058259,0.0,0.0,0.768244,0.037215,0.768244,0.037215,0.330316,0.014038,0.021147,0.000493
