@@ -36,6 +36,15 @@ class Event:
     entity_class: str
 
 
+@dataclass
+class PendingUpdate:
+    content_id: int
+    minute: int
+    entity_id: int
+    entity_class: str
+    base_cloud_content_id: int
+
+
 @dataclass(frozen=True)
 class SimulationRealization:
     events: list[Event]
@@ -178,6 +187,207 @@ def generate_realization(
     )
 
 
+def should_accept_lww(update_minute: int, cloud_minute: int) -> bool:
+    return update_minute >= cloud_minute
+
+
+def resolve_conflict(policy: str, update: PendingUpdate, cloud_minute: int) -> str:
+    if policy == "last_write_wins":
+        return "accept" if should_accept_lww(update.minute, cloud_minute) else "reject"
+    if policy == "cloud_preferred":
+        return "reject"
+    if policy == "display_preferred":
+        return "accept"
+    if policy == "manual_review_all":
+        return "manual"
+    if policy == "domain_aware":
+        if update.entity_class == "high":
+            return "manual"
+        return "accept" if should_accept_lww(update.minute, cloud_minute) else "reject"
+    raise ValueError(f"Unknown policy: {policy}")
+
+
+def run_once(
+    scenario: Scenario,
+    policy: str,
+    config: dict,
+    replication: int,
+    realization: SimulationRealization,
+) -> dict[str, float | int | str]:
+    day_minutes = int(config["day_minutes"])
+    entity_classes = build_entities(int(config["entity_count"]), config["entity_class_mix"])
+    entity_count = len(entity_classes)
+    events = realization.events
+    connectivity = realization.connectivity
+
+    cloud_content = [0] * entity_count
+    cloud_last_minute = [-1] * entity_count
+    display_content = [[0] * entity_count for _ in range(scenario.fleet_size)]
+    stale_sets: list[set[int]] = [set() for _ in range(scenario.fleet_size)]
+    pending: list[list[PendingUpdate]] = [[] for _ in range(scenario.fleet_size)]
+
+    next_content_id = 1
+    event_index = 0
+    sync_messages = 0
+    silent_overwrites = 0
+    high_risk_silent_overwrites = 0
+    manual_reviews = 0
+    high_risk_manual_reviews = 0
+    accepted_updates = 0
+    conflict_count = 0
+    high_risk_conflicts = 0
+    local_superseded_updates = 0
+    stale_entity_display_minutes = 0
+
+    def refresh_stale_for_entity(entity_id: int) -> None:
+        for display_id in range(scenario.fleet_size):
+            if display_content[display_id][entity_id] != cloud_content[entity_id]:
+                stale_sets[display_id].add(entity_id)
+            else:
+                stale_sets[display_id].discard(entity_id)
+
+    def set_display_content(display_id: int, entity_id: int, content_id: int) -> None:
+        display_content[display_id][entity_id] = content_id
+        if content_id != cloud_content[entity_id]:
+            stale_sets[display_id].add(entity_id)
+        else:
+            stale_sets[display_id].discard(entity_id)
+
+    for minute in range(day_minutes):
+        while event_index < len(events) and events[event_index].minute == minute:
+            event = events[event_index]
+            content_id = next_content_id
+            next_content_id += 1
+
+            if event.source == "cloud":
+                cloud_content[event.entity_id] = content_id
+                cloud_last_minute[event.entity_id] = minute
+                accepted_updates += 1
+                refresh_stale_for_entity(event.entity_id)
+            else:
+                assert event.display_id is not None
+                display_id = event.display_id
+                set_display_content(display_id, event.entity_id, content_id)
+
+                existing_index = next(
+                    (
+                        i
+                        for i, update in enumerate(pending[display_id])
+                        if update.entity_id == event.entity_id
+                    ),
+                    None,
+                )
+                if existing_index is None:
+                    pending[display_id].append(
+                        PendingUpdate(
+                            content_id=content_id,
+                            minute=minute,
+                            entity_id=event.entity_id,
+                            entity_class=event.entity_class,
+                            base_cloud_content_id=cloud_content[event.entity_id],
+                        )
+                    )
+                else:
+                    previous = pending[display_id][existing_index]
+                    pending[display_id][existing_index] = PendingUpdate(
+                        content_id=content_id,
+                        minute=minute,
+                        entity_id=event.entity_id,
+                        entity_class=event.entity_class,
+                        base_cloud_content_id=previous.base_cloud_content_id,
+                    )
+                    local_superseded_updates += 1
+            event_index += 1
+
+        if minute % scenario.sync_interval_minutes == 0:
+            for display_id in range(scenario.fleet_size):
+                if not connectivity[display_id][minute]:
+                    continue
+
+                remaining_pending: list[PendingUpdate] = []
+                pending_entities = {u.entity_id for u in pending[display_id]}
+
+                for update in pending[display_id]:
+                    sync_messages += 1
+                    conflict = update.base_cloud_content_id != cloud_content[update.entity_id]
+                    if conflict:
+                        conflict_count += 1
+                        if update.entity_class == "high":
+                            high_risk_conflicts += 1
+                        decision = resolve_conflict(
+                            policy,
+                            update,
+                            cloud_last_minute[update.entity_id],
+                        )
+                    else:
+                        decision = "accept"
+
+                    if decision == "accept":
+                        if conflict:
+                            silent_overwrites += 1
+                            if update.entity_class == "high":
+                                high_risk_silent_overwrites += 1
+                        cloud_content[update.entity_id] = update.content_id
+                        cloud_last_minute[update.entity_id] = update.minute
+                        refresh_stale_for_entity(update.entity_id)
+                        set_display_content(display_id, update.entity_id, update.content_id)
+                        accepted_updates += 1
+                    elif decision == "reject":
+                        if conflict:
+                            silent_overwrites += 1
+                            if update.entity_class == "high":
+                                high_risk_silent_overwrites += 1
+                        set_display_content(display_id, update.entity_id, cloud_content[update.entity_id])
+                    elif decision == "manual":
+                        manual_reviews += 1
+                        if update.entity_class == "high":
+                            high_risk_manual_reviews += 1
+                        set_display_content(display_id, update.entity_id, cloud_content[update.entity_id])
+                    else:
+                        remaining_pending.append(update)
+
+                pending[display_id] = remaining_pending
+
+                for entity_id in list(stale_sets[display_id]):
+                    if entity_id in pending_entities:
+                        continue
+                    set_display_content(display_id, entity_id, cloud_content[entity_id])
+                    sync_messages += 1
+
+        stale_entity_display_minutes += sum(len(stale) for stale in stale_sets)
+
+    end_stale_pairs = sum(len(stale) for stale in stale_sets)
+
+    possible_pairs = max(1, scenario.fleet_size * entity_count * day_minutes)
+    stale_ratio = stale_entity_display_minutes / possible_pairs
+
+    return {
+        "replication": replication,
+        "policy": policy,
+        "fleet_size": scenario.fleet_size,
+        "connectivity": scenario.connectivity.name,
+        "online_probability": scenario.connectivity.online_probability,
+        "mean_outage_minutes": scenario.connectivity.mean_outage_minutes,
+        "sync_interval_minutes": scenario.sync_interval_minutes,
+        "updates_per_display_day": scenario.updates_per_display_day,
+        "conflict_bias": scenario.conflict_bias,
+        "high_risk_update_share": scenario.high_risk_update_share,
+        "events_total": len(events),
+        "conflicts": conflict_count,
+        "high_risk_conflicts": high_risk_conflicts,
+        "silent_overwrites": silent_overwrites,
+        "high_risk_silent_overwrites": high_risk_silent_overwrites,
+        "manual_reviews": manual_reviews,
+        "high_risk_manual_reviews": high_risk_manual_reviews,
+        "accepted_updates": accepted_updates,
+        "sync_messages": sync_messages,
+        "local_superseded_updates": local_superseded_updates,
+        "stale_entity_display_minutes": stale_entity_display_minutes,
+        "stale_ratio": stale_ratio,
+        "end_stale_pairs": end_stale_pairs,
+    }
+
+
 def scenario_grid(config: dict) -> list[Scenario]:
     scenarios = config["scenarios"]
     connectivity = [
@@ -216,7 +426,9 @@ def main() -> None:
 
     config = read_config(args.config)
     root_rng = random.Random(int(config["seed"]))
+    rows: list[dict[str, object]] = []
     scenarios = scenario_grid(config)
+    policies = list(config["policies"])
     replications = int(config["replications"])
 
     for scenario_index, scenario in enumerate(scenarios):
@@ -229,6 +441,12 @@ def main() -> None:
                 entity_classes,
                 config,
             )
+            for policy in policies:
+                row = run_once(scenario, policy, config, replication, realization)
+                row["scenario_index"] = scenario_index
+                row["run_seed"] = run_seed
+                row["realization_seed"] = run_seed
+                rows.append(row)
 
 
 if __name__ == "__main__":
