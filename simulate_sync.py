@@ -3,55 +3,21 @@
 import argparse
 import csv
 import json
+import logging
 import random
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
-
-
-ENTITY_CLASSES = ("high", "medium", "low")
-
-
-@dataclass(frozen=True)
-class ConnectivityScenario:
-    name: str
-    online_probability: float
-    mean_outage_minutes: float
-
-
-@dataclass(frozen=True)
-class Scenario:
-    fleet_size: int
-    connectivity: ConnectivityScenario
-    sync_interval_minutes: int
-    updates_per_display_day: int
-    conflict_bias: float
-    high_risk_update_share: float
-
-
-@dataclass
-class Event:
-    minute: int
-    source: str
-    display_id: int | None
-    entity_id: int
-    entity_class: str
-
-
-@dataclass
-class PendingUpdate:
-    content_id: int
-    minute: int
-    entity_id: int
-    entity_class: str
-    base_cloud_content_id: int
-
-
-@dataclass(frozen=True)
-class SimulationRealization:
-    events: list[Event]
-    connectivity: list[list[bool]]
+from make_paper_figures import write_analysis_outputs
+from models import (
+    Event,
+    PendingUpdate,
+    Scenario,
+    SimulationRealization,
+    build_entities,
+    scenario_grid,
+)
 
 
 def read_config(path: Path) -> dict:
@@ -59,20 +25,8 @@ def read_config(path: Path) -> dict:
         return json.load(f)
 
 
-def build_entities(count: int, mix: dict[str, float]) -> list[str]:
-    classes: list[str] = []
-    remaining = count
-    for entity_class in ENTITY_CLASSES[:-1]:
-        n = int(round(count * mix[entity_class]))
-        classes.extend([entity_class] * n)
-        remaining -= n
-    classes.extend(["low"] * remaining)
-    return classes[:count]
-
-
 def weighted_entity_class(rng: random.Random, high_share: float) -> str:
     medium_share = max(0.0, min(1.0, (1.0 - high_share) * 0.57))
-    low_share = max(0.0, 1.0 - high_share - medium_share)
     draw = rng.random()
     if draw < high_share:
         return "high"
@@ -216,9 +170,9 @@ def run_once(
     config: dict,
     replication: int,
     realization: SimulationRealization,
+    entity_classes: list[str],
 ) -> dict[str, float | int | str]:
     day_minutes = int(config["day_minutes"])
-    entity_classes = build_entities(int(config["entity_count"]), config["entity_class_mix"])
     entity_count = len(entity_classes)
     events = realization.events
     connectivity = realization.connectivity
@@ -227,7 +181,8 @@ def run_once(
     cloud_last_minute = [-1] * entity_count
     display_content = [[0] * entity_count for _ in range(scenario.fleet_size)]
     stale_sets: list[set[int]] = [set() for _ in range(scenario.fleet_size)]
-    pending: list[list[PendingUpdate]] = [[] for _ in range(scenario.fleet_size)]
+    pending: list[list[PendingUpdate]] = [[]
+                                          for _ in range(scenario.fleet_size)]
 
     next_content_id = 1
     event_index = 0
@@ -333,19 +288,22 @@ def run_once(
                         cloud_content[update.entity_id] = update.content_id
                         cloud_last_minute[update.entity_id] = update.minute
                         refresh_stale_for_entity(update.entity_id)
-                        set_display_content(display_id, update.entity_id, update.content_id)
+                        set_display_content(
+                            display_id, update.entity_id, update.content_id)
                         accepted_updates += 1
                     elif decision == "reject":
                         if conflict:
                             silent_overwrites += 1
                             if update.entity_class == "high":
                                 high_risk_silent_overwrites += 1
-                        set_display_content(display_id, update.entity_id, cloud_content[update.entity_id])
+                        set_display_content(
+                            display_id, update.entity_id, cloud_content[update.entity_id])
                     elif decision == "manual":
                         manual_reviews += 1
                         if update.entity_class == "high":
                             high_risk_manual_reviews += 1
-                        set_display_content(display_id, update.entity_id, cloud_content[update.entity_id])
+                        set_display_content(
+                            display_id, update.entity_id, cloud_content[update.entity_id])
                     else:
                         remaining_pending.append(update)
 
@@ -354,7 +312,8 @@ def run_once(
                 for entity_id in list(stale_sets[display_id]):
                     if entity_id in pending_entities:
                         continue
-                    set_display_content(display_id, entity_id, cloud_content[entity_id])
+                    set_display_content(
+                        display_id, entity_id, cloud_content[entity_id])
                     sync_messages += 1
 
         stale_entity_display_minutes += sum(len(stale) for stale in stale_sets)
@@ -391,37 +350,6 @@ def run_once(
     }
 
 
-def scenario_grid(config: dict) -> list[Scenario]:
-    scenarios = config["scenarios"]
-    connectivity = [
-        ConnectivityScenario(
-            name=c["name"],
-            online_probability=float(c["online_probability"]),
-            mean_outage_minutes=float(c["mean_outage_minutes"]),
-        )
-        for c in scenarios["connectivity"]
-    ]
-
-    grid: list[Scenario] = []
-    for fleet_size in scenarios["fleet_size"]:
-        for conn in connectivity:
-            for sync_interval in scenarios["sync_interval_minutes"]:
-                for updates in scenarios["updates_per_display_day"]:
-                    for conflict_bias in scenarios["conflict_bias"]:
-                        for high_share in scenarios["high_risk_update_share"]:
-                            grid.append(
-                                Scenario(
-                                    fleet_size=int(fleet_size),
-                                    connectivity=conn,
-                                    sync_interval_minutes=int(sync_interval),
-                                    updates_per_display_day=int(updates),
-                                    conflict_bias=float(conflict_bias),
-                                    high_risk_update_share=float(high_share),
-                                )
-                            )
-    return grid
-
-
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     if not rows:
         return
@@ -433,7 +361,8 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def group_average(rows: list[dict[str, object]], keys: list[str]) -> list[dict[str, object]]:
-    buckets: dict[tuple[object, ...], list[dict[str, object]]] = defaultdict(list)
+    buckets: dict[tuple[object, ...],
+                  list[dict[str, object]]] = defaultdict(list)
     for row in rows:
         buckets[tuple(row[k] for k in keys)].append(row)
 
@@ -480,7 +409,8 @@ def svg_bar_chart(
     max_value = max(values) if values else 1.0
     max_value = max(max_value, 1.0)
     bar_gap = 18
-    bar_width = (plot_width - bar_gap * (len(labels) - 1)) / max(1, len(labels))
+    bar_width = (plot_width - bar_gap * (len(labels) - 1)) / \
+        max(1, len(labels))
     colors = ["#276FBF", "#6A994E", "#F4A261", "#9B5DE5", "#D62828"]
 
     parts = [
@@ -495,16 +425,21 @@ def svg_bar_chart(
     for tick in range(5):
         value = max_value * tick / 4
         y = margin_top + plot_height - (value / max_value) * plot_height
-        parts.append(f'<line x1="{margin_left - 5}" y1="{y:.1f}" x2="{width - margin_right}" y2="{y:.1f}" stroke="#e7e7e7" stroke-width="1"/>')
-        parts.append(f'<text x="{margin_left - 10}" y="{y + 4:.1f}" text-anchor="end" font-family="Arial" font-size="12">{value:.1f}</text>')
+        parts.append(
+            f'<line x1="{margin_left - 5}" y1="{y:.1f}" x2="{width - margin_right}" y2="{y:.1f}" stroke="#e7e7e7" stroke-width="1"/>')
+        parts.append(
+            f'<text x="{margin_left - 10}" y="{y + 4:.1f}" text-anchor="end" font-family="Arial" font-size="12">{value:.1f}</text>')
 
     for i, (label, value) in enumerate(zip(labels, values)):
         x = margin_left + i * (bar_width + bar_gap)
         bar_height = (value / max_value) * plot_height
         y = margin_top + plot_height - bar_height
-        parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_width:.1f}" height="{bar_height:.1f}" fill="{colors[i % len(colors)]}"/>')
-        parts.append(f'<text x="{x + bar_width / 2:.1f}" y="{y - 8:.1f}" text-anchor="middle" font-family="Arial" font-size="12">{value:.2f}</text>')
-        parts.append(f'<text x="{x + bar_width / 2:.1f}" y="{margin_top + plot_height + 24}" text-anchor="middle" font-family="Arial" font-size="12">{label.replace("_", " ")}</text>')
+        parts.append(
+            f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_width:.1f}" height="{bar_height:.1f}" fill="{colors[i % len(colors)]}"/>')
+        parts.append(
+            f'<text x="{x + bar_width / 2:.1f}" y="{y - 8:.1f}" text-anchor="middle" font-family="Arial" font-size="12">{value:.2f}</text>')
+        parts.append(
+            f'<text x="{x + bar_width / 2:.1f}" y="{margin_top + plot_height + 24}" text-anchor="middle" font-family="Arial" font-size="12">{label.replace("_", " ")}</text>')
 
     parts.append("</svg>")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -513,7 +448,8 @@ def svg_bar_chart(
 
 def make_figures(out_dir: Path, policy_summary: list[dict[str, object]]) -> None:
     labels = [str(row["policy"]) for row in policy_summary]
-    silent = [float(row["high_risk_silent_overwrites"]) for row in policy_summary]
+    silent = [float(row["high_risk_silent_overwrites"])
+              for row in policy_summary]
     manual = [float(row["high_risk_manual_reviews"]) for row in policy_summary]
     stale = [float(row["stale_ratio"]) * 100.0 for row in policy_summary]
 
@@ -554,7 +490,8 @@ def main() -> None:
     replications = int(config["replications"])
 
     for scenario_index, scenario in enumerate(scenarios):
-        entity_classes = build_entities(int(config["entity_count"]), config["entity_class_mix"])
+        entity_classes = build_entities(
+            int(config["entity_count"]), config["entity_class_mix"])
         for replication in range(replications):
             run_seed = root_rng.randrange(1_000_000_000)
             realization = generate_realization(
@@ -564,7 +501,8 @@ def main() -> None:
                 config,
             )
             for policy in policies:
-                row = run_once(scenario, policy, config, replication, realization)
+                row = run_once(scenario, policy, config,
+                               replication, realization, entity_classes)
                 row["scenario_index"] = scenario_index
                 row["run_seed"] = run_seed
                 row["realization_seed"] = run_seed
@@ -592,10 +530,12 @@ def main() -> None:
     write_csv(args.out / "policy_summary.csv", policy_summary)
     write_csv(args.out / "scenario_summary.csv", scenario_summary)
     write_csv(args.out / "high_risk_summary.csv", high_risk_summary)
-    make_figures(args.out, policy_summary)
 
-    print(f"Completed {len(rows)} runs")
-    print(f"Wrote outputs to {args.out}/ folder")
+    # Write additional analysis outputs (custom function from make_paper_figures.py)
+    write_analysis_outputs(args.out / "raw_runs.csv", args.out)
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Completed %d runs", len(rows))
+    logging.info("Wrote results to %s", args.out)
 
 
 if __name__ == "__main__":
