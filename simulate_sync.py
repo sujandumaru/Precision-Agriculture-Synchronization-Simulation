@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
-import json
 import argparse
+import csv
+import json
 import random
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
+from statistics import mean
 
 
 ENTITY_CLASSES = ("high", "medium", "low")
@@ -419,9 +422,128 @@ def scenario_grid(config: dict) -> list[Scenario]:
     return grid
 
 
+def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    if not rows:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def group_average(rows: list[dict[str, object]], keys: list[str]) -> list[dict[str, object]]:
+    buckets: dict[tuple[object, ...], list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        buckets[tuple(row[k] for k in keys)].append(row)
+
+    metric_names = [
+        "events_total",
+        "conflicts",
+        "high_risk_conflicts",
+        "silent_overwrites",
+        "high_risk_silent_overwrites",
+        "manual_reviews",
+        "high_risk_manual_reviews",
+        "accepted_updates",
+        "sync_messages",
+        "local_superseded_updates",
+        "stale_entity_display_minutes",
+        "stale_ratio",
+        "end_stale_pairs",
+    ]
+    output: list[dict[str, object]] = []
+    for group_values, group_rows in sorted(buckets.items()):
+        item = {key: value for key, value in zip(keys, group_values)}
+        item["runs"] = len(group_rows)
+        for metric in metric_names:
+            item[metric] = round(mean(float(r[metric]) for r in group_rows), 6)
+        output.append(item)
+    return output
+
+
+def svg_bar_chart(
+    path: Path,
+    title: str,
+    labels: list[str],
+    values: list[float],
+    y_label: str,
+) -> None:
+    width = 920
+    height = 520
+    margin_left = 90
+    margin_right = 40
+    margin_top = 70
+    margin_bottom = 110
+    plot_width = width - margin_left - margin_right
+    plot_height = height - margin_top - margin_bottom
+    max_value = max(values) if values else 1.0
+    max_value = max(max_value, 1.0)
+    bar_gap = 18
+    bar_width = (plot_width - bar_gap * (len(labels) - 1)) / max(1, len(labels))
+    colors = ["#276FBF", "#6A994E", "#F4A261", "#9B5DE5", "#D62828"]
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        '<rect width="100%" height="100%" fill="#ffffff"/>',
+        f'<text x="{width / 2}" y="34" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700">{title}</text>',
+        f'<text x="24" y="{margin_top + plot_height / 2}" transform="rotate(-90 24 {margin_top + plot_height / 2})" text-anchor="middle" font-family="Arial" font-size="14">{y_label}</text>',
+        f'<line x1="{margin_left}" y1="{margin_top + plot_height}" x2="{width - margin_right}" y2="{margin_top + plot_height}" stroke="#333" stroke-width="1"/>',
+        f'<line x1="{margin_left}" y1="{margin_top}" x2="{margin_left}" y2="{margin_top + plot_height}" stroke="#333" stroke-width="1"/>',
+    ]
+
+    for tick in range(5):
+        value = max_value * tick / 4
+        y = margin_top + plot_height - (value / max_value) * plot_height
+        parts.append(f'<line x1="{margin_left - 5}" y1="{y:.1f}" x2="{width - margin_right}" y2="{y:.1f}" stroke="#e7e7e7" stroke-width="1"/>')
+        parts.append(f'<text x="{margin_left - 10}" y="{y + 4:.1f}" text-anchor="end" font-family="Arial" font-size="12">{value:.1f}</text>')
+
+    for i, (label, value) in enumerate(zip(labels, values)):
+        x = margin_left + i * (bar_width + bar_gap)
+        bar_height = (value / max_value) * plot_height
+        y = margin_top + plot_height - bar_height
+        parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_width:.1f}" height="{bar_height:.1f}" fill="{colors[i % len(colors)]}"/>')
+        parts.append(f'<text x="{x + bar_width / 2:.1f}" y="{y - 8:.1f}" text-anchor="middle" font-family="Arial" font-size="12">{value:.2f}</text>')
+        parts.append(f'<text x="{x + bar_width / 2:.1f}" y="{margin_top + plot_height + 24}" text-anchor="middle" font-family="Arial" font-size="12">{label.replace("_", " ")}</text>')
+
+    parts.append("</svg>")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(parts), encoding="utf-8")
+
+
+def make_figures(out_dir: Path, policy_summary: list[dict[str, object]]) -> None:
+    labels = [str(row["policy"]) for row in policy_summary]
+    silent = [float(row["high_risk_silent_overwrites"]) for row in policy_summary]
+    manual = [float(row["high_risk_manual_reviews"]) for row in policy_summary]
+    stale = [float(row["stale_ratio"]) * 100.0 for row in policy_summary]
+
+    svg_bar_chart(
+        out_dir / "figures" / "high_risk_silent_overwrites.svg",
+        "High-risk silent overwrites by policy",
+        labels,
+        silent,
+        "Mean count per run",
+    )
+    svg_bar_chart(
+        out_dir / "figures" / "high_risk_manual_reviews.svg",
+        "High-risk manual reviews by policy",
+        labels,
+        manual,
+        "Mean count per run",
+    )
+    svg_bar_chart(
+        out_dir / "figures" / "stale_ratio.svg",
+        "Mean stale entity-display ratio by policy",
+        labels,
+        stale,
+        "Percent of entity-display-minutes",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=Path("config.json"))
+    parser.add_argument("--out", type=Path, default=Path("results"))
     args = parser.parse_args()
 
     config = read_config(args.config)
@@ -447,6 +569,33 @@ def main() -> None:
                 row["run_seed"] = run_seed
                 row["realization_seed"] = run_seed
                 rows.append(row)
+
+    args.out.mkdir(parents=True, exist_ok=True)
+    write_csv(args.out / "raw_runs.csv", rows)
+
+    policy_summary = group_average(rows, ["policy"])
+    scenario_summary = group_average(
+        rows,
+        [
+            "connectivity",
+            "sync_interval_minutes",
+            "updates_per_display_day",
+            "conflict_bias",
+            "high_risk_update_share",
+            "policy",
+        ],
+    )
+    high_risk_summary = group_average(
+        rows,
+        ["policy", "high_risk_update_share", "conflict_bias"],
+    )
+    write_csv(args.out / "policy_summary.csv", policy_summary)
+    write_csv(args.out / "scenario_summary.csv", scenario_summary)
+    write_csv(args.out / "high_risk_summary.csv", high_risk_summary)
+    make_figures(args.out, policy_summary)
+
+    print(f"Completed {len(rows)} runs")
+    print(f"Wrote outputs to {args.out}/ folder")
 
 
 if __name__ == "__main__":
