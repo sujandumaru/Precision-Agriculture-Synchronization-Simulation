@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""Sensitivity simulation for precision-agriculture setup-data synchronization.
+
+The model is deliberately simple and transparent. It does not claim to reproduce
+any vendor implementation. It compares conflict-resolution policies across
+parameter sweeps motivated by public precision-agriculture documentation and
+rural-connectivity reports.
+"""
 
 import argparse
 import csv
@@ -6,7 +13,6 @@ import json
 import logging
 import random
 from collections import defaultdict
-from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
 from make_paper_figures import write_analysis_outputs
@@ -21,11 +27,13 @@ from models import (
 
 
 def read_config(path: Path) -> dict:
+    """Load the JSON configuration used to define the simulation sweep."""
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def weighted_entity_class(rng: random.Random, high_share: float) -> str:
+    """Sample an entity risk class for a generated update event."""
     medium_share = max(0.0, min(1.0, (1.0 - high_share) * 0.57))
     draw = rng.random()
     if draw < high_share:
@@ -42,6 +50,7 @@ def choose_entity(
     pending_by_entity: dict[int, int],
     conflict_bias: float,
 ) -> int:
+    """Choose an entity ID, with optional bias toward already pending entities."""
     candidates = [i for i, c in enumerate(
         entity_classes) if c == desired_class]
     if pending_by_entity and rng.random() < conflict_bias:
@@ -59,6 +68,7 @@ def generate_events(
     day_minutes: int,
     cloud_update_ratio: float,
 ) -> list[Event]:
+    """Generate the cloud and display update events for one simulated workday."""
     total_display_events = scenario.fleet_size * scenario.updates_per_display_day
     total_cloud_events = int(round(total_display_events * cloud_update_ratio))
     events: list[Event] = []
@@ -105,6 +115,7 @@ def generate_connectivity(
     scenario: Scenario,
     day_minutes: int,
 ) -> list[list[bool]]:
+    """Generate minute-by-minute online states for each display in a scenario."""
     p_online = scenario.connectivity.online_probability
     mean_outage = max(1.0, scenario.connectivity.mean_outage_minutes)
     mean_online = mean_outage * p_online / max(0.01, 1.0 - p_online)
@@ -131,6 +142,7 @@ def generate_realization(
     entity_classes: list[str],
     config: dict,
 ) -> SimulationRealization:
+    """Create the shared event and connectivity realization for policy runs."""
     day_minutes = int(config["day_minutes"])
     return SimulationRealization(
         events=generate_events(
@@ -145,10 +157,12 @@ def generate_realization(
 
 
 def should_accept_lww(update_minute: int, cloud_minute: int) -> bool:
+    """Return whether last-write-wins accepts a pending update."""
     return update_minute >= cloud_minute
 
 
 def resolve_conflict(policy: str, update: PendingUpdate, cloud_minute: int) -> str:
+    """Resolve one detected conflict under the requested policy."""
     if policy == "last_write_wins":
         return "accept" if should_accept_lww(update.minute, cloud_minute) else "reject"
     if policy == "cloud_preferred":
@@ -172,6 +186,7 @@ def run_once(
     realization: SimulationRealization,
     entity_classes: list[str],
 ) -> dict[str, float | int | str]:
+    """Evaluate one policy on one scenario realization and return run metrics."""
     day_minutes = int(config["day_minutes"])
     entity_count = len(entity_classes)
     events = realization.events
@@ -198,6 +213,7 @@ def run_once(
     stale_entity_display_minutes = 0
 
     def refresh_stale_for_entity(entity_id: int) -> None:
+        """Refresh stale-entity tracking for all displays for one entity."""
         for display_id in range(scenario.fleet_size):
             if display_content[display_id][entity_id] != cloud_content[entity_id]:
                 stale_sets[display_id].add(entity_id)
@@ -205,6 +221,7 @@ def run_once(
                 stale_sets[display_id].discard(entity_id)
 
     def set_display_content(display_id: int, entity_id: int, content_id: int) -> None:
+        """Update one display entity value and its stale-tracking state."""
         display_content[display_id][entity_id] = content_id
         if content_id != cloud_content[entity_id]:
             stale_sets[display_id].add(entity_id)
@@ -351,6 +368,7 @@ def run_once(
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    """Write dictionaries to a CSV file using the first row as the schema."""
     if not rows:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -361,6 +379,7 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def group_average(rows: list[dict[str, object]], keys: list[str]) -> list[dict[str, object]]:
+    """Compute grouped mean metrics for the selected grouping keys."""
     buckets: dict[tuple[object, ...],
                   list[dict[str, object]]] = defaultdict(list)
     for row in rows:
@@ -398,6 +417,7 @@ def svg_bar_chart(
     values: list[float],
     y_label: str,
 ) -> None:
+    """Create a lightweight SVG bar chart for simulation diagnostics."""
     width = 920
     height = 520
     margin_left = 90
@@ -446,37 +466,8 @@ def svg_bar_chart(
     path.write_text("\n".join(parts), encoding="utf-8")
 
 
-def make_figures(out_dir: Path, policy_summary: list[dict[str, object]]) -> None:
-    labels = [str(row["policy"]) for row in policy_summary]
-    silent = [float(row["high_risk_silent_overwrites"])
-              for row in policy_summary]
-    manual = [float(row["high_risk_manual_reviews"]) for row in policy_summary]
-    stale = [float(row["stale_ratio"]) * 100.0 for row in policy_summary]
-
-    svg_bar_chart(
-        out_dir / "figures" / "high_risk_silent_overwrites.svg",
-        "High-risk silent overwrites by policy",
-        labels,
-        silent,
-        "Mean count per run",
-    )
-    svg_bar_chart(
-        out_dir / "figures" / "high_risk_manual_reviews.svg",
-        "High-risk manual reviews by policy",
-        labels,
-        manual,
-        "Mean count per run",
-    )
-    svg_bar_chart(
-        out_dir / "figures" / "stale_ratio.svg",
-        "Mean stale entity-display ratio by policy",
-        labels,
-        stale,
-        "Percent of entity-display-minutes",
-    )
-
-
 def main() -> None:
+    """Run the simulation from command-line arguments and write outputs."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=Path("config.json"))
     parser.add_argument("--out", type=Path, default=Path("results"))

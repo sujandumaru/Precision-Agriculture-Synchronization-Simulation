@@ -1,3 +1,5 @@
+"""Data structures for the synchronization sensitivity simulation."""
+
 from dataclasses import dataclass
 
 
@@ -6,6 +8,8 @@ ENTITY_CLASSES = ("high", "medium", "low")
 
 @dataclass(frozen=True)
 class ConnectivityScenario:
+    """Connectivity assumptions for one simulated rural network condition."""
+
     name: str
     online_probability: float
     mean_outage_minutes: float
@@ -13,6 +17,8 @@ class ConnectivityScenario:
 
 @dataclass(frozen=True)
 class Scenario:
+    """One parameter combination in the synchronization sensitivity sweep."""
+
     fleet_size: int
     connectivity: ConnectivityScenario
     sync_interval_minutes: int
@@ -23,6 +29,8 @@ class Scenario:
 
 @dataclass
 class Event:
+    """A generated cloud-side or display-side setup-data update event."""
+
     minute: int
     source: str
     display_id: int | None
@@ -32,6 +40,8 @@ class Event:
 
 @dataclass
 class PendingUpdate:
+    """A display update waiting for synchronization with the cloud state."""
+
     content_id: int
     minute: int
     entity_id: int
@@ -41,11 +51,15 @@ class PendingUpdate:
 
 @dataclass(frozen=True)
 class SimulationRealization:
+    """Generated event stream and connectivity states shared across policies."""
+
     events: list[Event]
     connectivity: list[list[bool]]
 
 
 def build_entities(count: int, mix: dict[str, float]) -> list[str]:
+    """Create entity risk-class labels according to the configured mix."""
+
     classes: list[str] = []
     remaining = count
     for entity_class in ENTITY_CLASSES[:-1]:
@@ -57,6 +71,8 @@ def build_entities(count: int, mix: dict[str, float]) -> list[str]:
 
 
 def scenario_grid(config: dict) -> list[Scenario]:
+    """Expand the configuration sweep into concrete simulation scenarios."""
+
     scenarios = config["scenarios"]
     connectivity = [
         ConnectivityScenario(

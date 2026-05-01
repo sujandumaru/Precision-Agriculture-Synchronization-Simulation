@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Create manuscript-ready figures and policy statistics from simulation output."""
+
 import matplotlib.pyplot as plt
 
 import argparse
@@ -35,11 +37,13 @@ POLICY_COLORS = {
 
 
 def read_rows(path: Path) -> list[dict[str, str]]:
+    """Read a simulation CSV file into a list of row dictionaries."""
     with path.open("r", newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
 def summarize_by_policy(rows: list[dict[str, str]]) -> list[dict[str, object]]:
+    """Calculate policy-level means and 95% confidence intervals."""
     grouped: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in rows:
         grouped[row["policy"]].append(row)
@@ -74,6 +78,7 @@ def summarize_by_policy(rows: list[dict[str, str]]) -> list[dict[str, object]]:
 
 
 def summarize_paired_comparisons(rows: list[dict[str, str]]) -> list[dict[str, object]]:
+    """Calculate paired policy differences on shared scenario realizations."""
     grouped: dict[tuple[str, str, str],
                   dict[str, dict[str, str]]] = defaultdict(dict)
     for row in rows:
@@ -128,6 +133,7 @@ def summarize_paired_comparisons(rows: list[dict[str, str]]) -> list[dict[str, o
 
 
 def summarize_scenario_robustness(rows: list[dict[str, str]]) -> list[dict[str, object]]:
+    """Summarize domain-aware robustness for each parameter-cell scenario."""
     grouped: dict[str, dict[str, list[dict[str, str]]]
                   ] = defaultdict(lambda: defaultdict(list))
     for row in rows:
@@ -148,6 +154,7 @@ def summarize_scenario_robustness(rows: list[dict[str, str]]) -> list[dict[str, 
         representative = policy_rows["domain_aware"][0]
 
         def avg(policy: str, metric: str) -> float:
+            """Return the mean metric value for one policy in this scenario."""
             return mean(float(row[metric]) for row in policy_rows[policy])
 
         manual_all = avg("manual_review_all", "manual_reviews")
@@ -185,6 +192,7 @@ def summarize_scenario_robustness(rows: list[dict[str, str]]) -> list[dict[str, 
 
 
 def summarize_robustness_by_factor(rows: list[dict[str, str]]) -> list[dict[str, object]]:
+    """Aggregate robustness metrics by each individual swept factor."""
     scenario_fields = [
         "fleet_size",
         "connectivity",
@@ -204,6 +212,7 @@ def summarize_robustness_by_factor(rows: list[dict[str, str]]) -> list[dict[str,
                 by_policy[row["policy"]].append(row)
 
             def avg(policy: str, metric: str) -> float:
+                """Return the mean metric value for one policy in this factor group."""
                 return mean(float(row[metric]) for row in by_policy[policy])
 
             manual_all = avg("manual_review_all", "manual_reviews")
@@ -236,8 +245,10 @@ def summarize_robustness_by_factor(rows: list[dict[str, str]]) -> list[dict[str,
 
 
 def summarize_robustness_overall(scenario_rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Create a compact overall robustness summary from scenario rows."""
 
     def safe_median(values: list[float]) -> float:
+        """Return the median when values exist, otherwise return zero."""
         return median(values) if values else 0.0
 
     manual_reduction_percent = [
@@ -282,6 +293,7 @@ def summarize_robustness_overall(scenario_rows: list[dict[str, object]]) -> list
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    """Write dictionaries to a CSV file using the first row as the schema."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -298,6 +310,7 @@ def matplotlib_bar_chart(
     y_label: str,
     note: str,
 ) -> None:
+    """Create a manuscript-ready SVG bar chart with Matplotlib."""
     values = [float(row[f"{metric}_mean"]) for row in rows]
     errors = [float(row[f"{metric}_ci95"]) for row in rows]
     labels = [str(row["label"]) for row in rows]
@@ -370,6 +383,7 @@ def matplotlib_bar_chart(
 
 
 def write_analysis_outputs(raw_path: Path, out_dir: Path) -> None:
+    """Write paper-ready statistics and figures derived from raw run output."""
     rows = read_rows(raw_path)
     stats = summarize_by_policy(rows)
     write_csv(out_dir / "policy_stats_with_ci.csv", stats)
@@ -391,7 +405,7 @@ def write_analysis_outputs(raw_path: Path, out_dir: Path) -> None:
         stats,
         "high_risk_silent_overwrites",
         "Mean high-risk silent overwrites per run",
-        r"$\bf{\Domain-aware}$ and $\bf{\Manual\ review\ all}$ policies prevent silent overwrites for high-integrity setup entities by construction.",
+        r"$\bf{\ Domain-aware}$ and $\bf{\ Manual\ review\ all}$ policies prevent silent overwrites for high-integrity setup entities by construction.",
     )
     matplotlib_bar_chart(
         figure_dir / "figure_2_total_manual_reviews.svg",
@@ -400,7 +414,7 @@ def write_analysis_outputs(raw_path: Path, out_dir: Path) -> None:
         stats,
         "manual_reviews",
         "Mean manual-review cases per run",
-        r"$\bf{\Domain-aware}$ routes only high-risk conflicts to review, reducing review burden compared with reviewing all conflicts.",
+        r"$\bf{\ Domain-aware}$ routes only high-risk conflicts to review, reducing review burden compared with reviewing all conflicts.",
     )
     matplotlib_bar_chart(
         figure_dir / "supplement_stale_ratio.svg",
@@ -414,6 +428,7 @@ def write_analysis_outputs(raw_path: Path, out_dir: Path) -> None:
 
 
 def main() -> None:
+    """Parse CLI arguments and write analysis outputs."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--raw", type=Path, default=Path("results/raw_runs.csv"))
     parser.add_argument("--out", type=Path, default=Path("results"))
