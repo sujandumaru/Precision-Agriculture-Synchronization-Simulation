@@ -1,0 +1,17 @@
+# runtime working files - never commit
+run/
+run_crash/
+sweep_out/
+server_s*/
+.render/
+tmp/
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.jsonl
+*.bak
+shard*.out.txt
+shard*.err.txt
+__pycache__/
+*.pyc
