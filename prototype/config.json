@@ -1,0 +1,22 @@
+{
+  "seed": 42,
+  "ticks": 240,
+  "fleet_size": 5,
+  "entity_count": 40,
+  "entity_class_mix": {
+    "high": 0.3,
+    "medium": 0.4,
+    "low": 0.3
+  },
+  "cloud_update_ratio": 0.4,
+  "updates_per_display_day": 60,
+  "conflict_bias": 0.2,
+  "high_risk_update_share": 0.3,
+  "sync_interval_ticks": 10,
+  "online_probability": 0.7,
+  "mean_outage_ticks": 20,
+  "fault_drop": 0.05,
+  "fault_dup": 0.05,
+  "fault_reorder": 0.1,
+  "clock_skew_ms": -120000
+}
