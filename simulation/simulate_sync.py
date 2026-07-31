@@ -15,8 +15,8 @@ import random
 from collections import defaultdict
 from pathlib import Path
 from statistics import mean
-from make_paper_figures import write_analysis_outputs
-from models import (
+from simulation.make_paper_figures import write_analysis_outputs
+from simulation.models import (
     Event,
     PendingUpdate,
     Scenario,
