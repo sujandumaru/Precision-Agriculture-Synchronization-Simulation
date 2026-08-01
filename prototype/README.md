@@ -40,56 +40,53 @@ python3 run_experiment.py --crash-at 0.5     # SIGKILL the cloud at 50% of the r
 | 6 | `version_vector_causal` | **new baseline** |
 | 7 | `crdt_field_merge` | **new baseline** |
 
-Policies 6 and 7 exist because the paper cites Shapiro et al. (CRDTs) and Terry et al.
-(Bayou) in related work but benchmarks only against timestamp and authority rules. A
-distributed-systems reviewer will ask why. These are the answer.
+The causal variants exist because the paper cites Parker et al. (version vectors) and
+Shapiro et al. (CRDTs) in related work but would otherwise benchmark only against
+timestamp and authority rules. `crdt_field_merge` is a field-wise last-write-wins
+register merge inspired by CRDT designs; its convergence algebra was not formally
+established here, so it is not claimed to be a general conflict-free replicated data type.
 
 ## Result that matters
 
-Full design: 729 cells x 20 replications x 7 policies = **102,060 runs**, every
-(cell, replication) evaluated under all seven policies on the identical workload.
+Full design: 729 cells x 20 replications x 10 policies = **145,800 paired runs**, every
+(cell, replication) evaluated under all ten policies on an identical workload.
 
-| Policy | high-risk silent overwrites | total silent overwrites | manual reviews |
+| Policy | high-integrity discarded | total silent overwrites | manual reviews |
 |---|---|---|---|
-| `last_write_wins` | 3.1009 | 8.8562 | 0.0000 |
-| `cloud_preferred` | 3.1014 | 8.8566 | 0.0000 |
-| `display_preferred` | 3.1001 | 8.8547 | 0.0000 |
-| `version_vector_causal` | **3.1002** | 8.8546 | 0.0000 |
-| `crdt_field_merge` | **1.4715** | **3.9416** | 0.0000 |
-| `manual_review_all` | 0.0000 | 0.0000 | 8.3219 |
-| `domain_aware` | **0.0000** | 5.7549 | **2.8924** |
+| `last_write_wins` | 1.8472 | 5.2919 | 0.0000 |
+| `cloud_preferred` | 1.8472 | 5.2919 | 0.0000 |
+| `display_preferred` | 1.8472 | 5.2920 | 0.0000 |
+| `version_vector_causal` | 1.8472 | 5.2920 | 0.0000 |
+| `version_vector_cloud_wins` | 1.8472 | 5.2919 | 0.0000 |
+| `version_vector_display_wins` | 1.8472 | 5.2919 | 0.0000 |
+| `version_vector_random` | 1.8472 | 5.2919 | 0.0000 |
+| `crdt_field_merge` | **0.9134** | **2.4477** | 0.0000 |
+| `manual_review_all` | 0.0000 | 0.0000 | 5.0464 |
+| `domain_aware` | **0.0000** | 3.4447 | **1.7509** |
 
-### Causal consistency does not protect high-integrity records
+### Read this before quoting the numbers
 
-`version_vector_causal` against `last_write_wins`, paired across 14,580 runs:
+**The high-integrity loss figure is an identity, not a measurement.** For every policy
+that resolves each conflict by picking a winner, exactly one branch is discarded per
+conflict, so `high_risk_silent_overwrites == high_risk_conflicts` in 14,580 of 14,580
+runs. The 1.8472 shared by seven policies is therefore the high-integrity *conflict rate*
+under this workload, relabelled. It is not evidence that one tiebreak beats another; no
+tiebreak can. The four tiebreak variants exist to confirm the implementation contains no
+accidental content sensitivity, which is a sanity check rather than a finding.
 
-- mean difference: **-0.000686**
-- **99.7% of runs produce identical outcomes**
+Likewise `manual_reviews == conflicts` for `manual_review_all` and
+`manual_reviews == high_risk_conflicts` for `domain_aware`, in all 14,580 runs each. The
+65.3% review reduction is consequently the fraction of conflicts that are *not*
+high-integrity, which is set by the entity mix.
 
-Version vectors detect concurrency correctly and remove the wall-clock dependence, and
-make essentially no difference to how many high-integrity records are lost. Detecting a
-conflict is not the same as knowing it matters.
+**The 65.3% is an average over a parameter we chose the levels of.** It ranges from 91.7%
+at a 15% high-integrity update share to 35.3% at 50%. Across every other factor it is
+essentially flat (connectivity 64.2-65.8%, fleet size 64.6-65.5%, conflict bias
+65.1-65.5%, sync interval 65.1-65.6%). Quote the range, not the average alone.
 
-### The strongest baseline halves the loss but does not close it
-
-`crdt_field_merge` cuts high-risk loss by **52.5%** relative to last-write-wins and total
-loss by 55%, because disjoint field edits survive. It still discards 1.47 high-integrity
-records per run whenever two replicas write the same field. Only `manual_review_all` and
-`domain_aware` reach zero, and `domain_aware` gets there at **2.89 reviews per run against
-8.32 — a 65.2% reduction**.
-
-### An honest complication worth reporting
-
-`crdt_field_merge` has *lower total* silent overwrites than `domain_aware` (3.94 against
-5.75). The domain-aware policy is not uniformly better; it is better at protecting the
-records that matter, and worse on aggregate volume, because it resolves lower-integrity
-conflicts automatically by design.
-
-The two are therefore complementary rather than competing, which suggests a policy this
-study has not evaluated: field-level merge for low- and medium-integrity entities, review
-routing for high-integrity ones. That combination would plausibly dominate both. It is
-the obvious next experiment and it should be named in the paper before a reviewer names
-it first.
+The one genuinely non-tautological policy result is `crdt_field_merge`: because field-wise
+merge changes the discard-per-conflict ratio rather than inheriting it, its 0.9134 is not
+fixed by the conflict rate. It halves high-integrity loss (-50.6%) without eliminating it.
 
 ## Invariants
 
@@ -148,7 +145,7 @@ python3 agreement.py --simulation ../simulation/results/raw_runs.csv
 open its journal there and the server will fail to start. Use a local disk path.
 
 Throughput is roughly 0.1 s per run with a persistent server, so the full design
-(729 cells x 20 replications x 5 policies = 72,900 runs) is about two hours. The full
+(729 cells x 20 replications x 10 policies = 145,800 runs) is roughly four hours. The full
 sweep is tractable; it just should not be run in a foreground session.
 
 ### Result on the 65 corner cells
@@ -168,20 +165,18 @@ and implementation.
 (63% rather than the paper's 64.9% because these are the 65 corner cells, not the full
 equally-weighted 729-cell design.)
 
-### Full-design result (729 cells, 72,900 runs)
+### Cross-implementation comparison (prototype vs discrete-event model)
 
-| Policy | metric | simulation | prototype | diff |
-|---|---|---|---|---|
-| `last_write_wins` | conflicts | 2.197 | 8.856 | +6.659 |
-| `last_write_wins` | high-risk silent overwrites | 0.772 | 3.101 | +2.329 |
-| `manual_review_all` | manual reviews | 2.186 | 8.322 | +6.136 |
-| `domain_aware` | high-risk silent overwrites | 0.000 | 0.000 | 0.000 |
-| `domain_aware` | manual reviews | 0.768 | 2.892 | +2.124 |
+| Policy | metric | simulation | prototype |
+|---|---|---|---|
+| `last_write_wins` | conflicts | 2.197 | 5.292 |
+| `last_write_wins` | high-integrity discarded | 0.772 | 1.847 |
+| `manual_review_all` | manual reviews | 2.186 | 5.046 |
+| `domain_aware` | high-integrity discarded | 0.000 | 0.000 |
+| `domain_aware` | manual reviews | 0.768 | 1.751 |
 
-Manual-review reduction versus `manual_review_all`: **64.9% simulated, 65.2% measured
-— a 0.4 point gap.** The simulated figure is the number reported in the manuscript, so
-the published headline claim reproduces in a running implementation to within half a
-point. All three load-bearing claims agree.
+Manual-review reduction: **64.9% simulated, 65.3% measured — a 0.4 point gap.** All three
+of the paper's load-bearing claims agree between model and implementation.
 
 ### The discrepancy, and a hypothesis that did not survive
 

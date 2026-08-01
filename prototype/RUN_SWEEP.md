@@ -9,7 +9,7 @@
    enumerated in factor order, so stopping early collapses `fleet_size`, `connectivity`,
    and `sync_interval` to their first level and hands you the easiest corner of the
    design. Any agreement figure from that is meaningless.
-3. **Verify the row count before running the analysis.** It must be 72,900.
+3. **Verify the row count before running the analysis.** It must be 145,800.
 
 ## Check Python
 
@@ -76,7 +76,7 @@ watch the row count from a second window rather than assuming it has stalled.
 ```powershell
 $n = (Get-ChildItem C:\proto_run\prototype_runs_s*.csv |
       ForEach-Object { (Get-Content $_).Count - 1 } | Measure-Object -Sum).Sum
-Write-Host "$n of 72900 runs  ($([math]::Round(100*$n/72900,1))%)"
+Write-Host "$n of 145800 runs  ($([math]::Round(100*$n/145800,1))%)"
 ```
 
 ## Analysis

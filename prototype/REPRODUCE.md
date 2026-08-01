@@ -58,5 +58,8 @@ python cloud_server.py --failpoint before_commit --failpoint-at 3 ...
 
 ## Determinism
 
-All seeds derive from a fixed master seed. The same configuration produces byte-identical
-results across operating systems and across interrupted-and-resumed execution.
+All seeds derive from a fixed master seed. Two independent full executions agreed on
+145,787 of 145,800 runs. The thirteen differing runs arise from wall-clock tiebreaks in
+the timestamp-dependent policies and from transient transport retries under concurrent
+load; no policy mean shifted by more than 0.0002 records per run. The artifact is
+reproducible at the precision reported in the paper, not bit-for-bit.
