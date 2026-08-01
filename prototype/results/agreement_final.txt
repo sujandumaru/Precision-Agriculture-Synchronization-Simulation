@@ -1,0 +1,39 @@
+prototype runs: 145800   cells sampled: 729 of 729
+
+matched simulation runs on the same cells: 72900
+
+policy               metric                              sim    proto     diff
+------------------------------------------------------------------------------
+last_write_wins      conflicts                         2.197    5.292   +3.095
+last_write_wins      high_risk_silent_overwrites       0.772    1.847   +1.075
+last_write_wins      manual_reviews                    0.000    0.000   +0.000
+
+cloud_preferred      conflicts                         2.186    5.292   +3.106
+cloud_preferred      high_risk_silent_overwrites       0.768    1.847   +1.079
+cloud_preferred      manual_reviews                    0.000    0.000   +0.000
+
+display_preferred    conflicts                         2.240    5.292   +3.052
+display_preferred    high_risk_silent_overwrites       0.789    1.847   +1.058
+display_preferred    manual_reviews                    0.000    0.000   +0.000
+
+manual_review_all    conflicts                         2.186    5.046   +2.860
+manual_review_all    high_risk_silent_overwrites       0.000    0.000   +0.000
+manual_review_all    manual_reviews                    2.186    5.046   +2.860
+
+domain_aware         conflicts                         2.194    5.196   +3.002
+domain_aware         high_risk_silent_overwrites       0.000    0.000   +0.000
+domain_aware         manual_reviews                    0.768    1.751   +0.983
+
+==============================================================================
+CONCLUSION CHECKS (do the paper's claims survive in the implementation?)
+==============================================================================
+
+manual-review reduction vs manual_review_all:
+   simulation  64.9%      prototype  65.3%      gap 0.4%
+
+  [AGREE   ] domain_aware eliminates high-risk silent overwrites
+             simulation=True  prototype=True
+  [AGREE   ] domain_aware reduces review burden >50%
+             simulation=True  prototype=True
+  [AGREE   ] domain_aware loses fewer high-risk records than LWW
+             simulation=True  prototype=True

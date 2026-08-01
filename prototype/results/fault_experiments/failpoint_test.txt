@@ -1,0 +1,8 @@
+FAILPOINT TEST - crash inside the audit/commit window
+==============================================================
+server exit code            : 70  (70 = failpoint tripped inside the window)
+audit records committed     : 24
+applied_updates rows        : 24
+ORPHANED audit decisions    : 0
+
+RESULT: ATOMIC - no decision survived without its state change

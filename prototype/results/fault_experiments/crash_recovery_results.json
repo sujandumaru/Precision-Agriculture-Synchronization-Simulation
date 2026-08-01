@@ -1,0 +1,772 @@
+[
+  {
+    "policy": "last_write_wins",
+    "metrics": {
+      "conflicts": 152,
+      "high_risk_conflicts": 43,
+      "silent_overwrites": 152,
+      "high_risk_silent_overwrites": 43,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 243,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 91,
+      "high_risk_conflicts": 24,
+      "silent_overwrites": 91,
+      "high_risk_silent_overwrites": 24,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 131,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 126998,
+      "bytes_out": 570252,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=0 queue=0"
+      }
+    ],
+    "review_queue_len": 0,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "cloud_preferred",
+    "metrics": {
+      "conflicts": 152,
+      "high_risk_conflicts": 43,
+      "silent_overwrites": 152,
+      "high_risk_silent_overwrites": 43,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 243,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 91,
+      "high_risk_conflicts": 24,
+      "silent_overwrites": 91,
+      "high_risk_silent_overwrites": 24,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 131,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 127921,
+      "bytes_out": 592087,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=0 queue=0"
+      }
+    ],
+    "review_queue_len": 0,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "display_preferred",
+    "metrics": {
+      "conflicts": 152,
+      "high_risk_conflicts": 43,
+      "silent_overwrites": 152,
+      "high_risk_silent_overwrites": 43,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 243,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 91,
+      "high_risk_conflicts": 24,
+      "silent_overwrites": 91,
+      "high_risk_silent_overwrites": 24,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 131,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 124332,
+      "bytes_out": 536769,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=0 queue=0"
+      }
+    ],
+    "review_queue_len": 0,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "manual_review_all",
+    "metrics": {
+      "conflicts": 134,
+      "high_risk_conflicts": 38,
+      "silent_overwrites": 0,
+      "high_risk_silent_overwrites": 0,
+      "manual_reviews": 134,
+      "high_risk_manual_reviews": 38,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 261,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 78,
+      "high_risk_conflicts": 21,
+      "silent_overwrites": 0,
+      "high_risk_silent_overwrites": 0,
+      "manual_reviews": 78,
+      "high_risk_manual_reviews": 21,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 144,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 123204,
+      "bytes_out": 455524,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=134 queue=134"
+      }
+    ],
+    "review_queue_len": 134,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "domain_aware",
+    "metrics": {
+      "conflicts": 147,
+      "high_risk_conflicts": 38,
+      "silent_overwrites": 109,
+      "high_risk_silent_overwrites": 0,
+      "manual_reviews": 38,
+      "high_risk_manual_reviews": 38,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 248,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 88,
+      "high_risk_conflicts": 21,
+      "silent_overwrites": 67,
+      "high_risk_silent_overwrites": 0,
+      "manual_reviews": 21,
+      "high_risk_manual_reviews": 21,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 134,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 125971,
+      "bytes_out": 543523,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "0 violation(s)"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=38 queue=38"
+      }
+    ],
+    "review_queue_len": 38,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "version_vector_causal",
+    "metrics": {
+      "conflicts": 152,
+      "high_risk_conflicts": 43,
+      "silent_overwrites": 152,
+      "high_risk_silent_overwrites": 43,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 243,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 91,
+      "high_risk_conflicts": 24,
+      "silent_overwrites": 91,
+      "high_risk_silent_overwrites": 24,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 131,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 124332,
+      "bytes_out": 536773,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=0 queue=0"
+      }
+    ],
+    "review_queue_len": 0,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "version_vector_cloud_wins",
+    "metrics": {
+      "conflicts": 152,
+      "high_risk_conflicts": 43,
+      "silent_overwrites": 152,
+      "high_risk_silent_overwrites": 43,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 243,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 91,
+      "high_risk_conflicts": 24,
+      "silent_overwrites": 91,
+      "high_risk_silent_overwrites": 24,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 131,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 127921,
+      "bytes_out": 592097,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=0 queue=0"
+      }
+    ],
+    "review_queue_len": 0,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "version_vector_display_wins",
+    "metrics": {
+      "conflicts": 152,
+      "high_risk_conflicts": 43,
+      "silent_overwrites": 152,
+      "high_risk_silent_overwrites": 43,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 243,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 91,
+      "high_risk_conflicts": 24,
+      "silent_overwrites": 91,
+      "high_risk_silent_overwrites": 24,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 131,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 124332,
+      "bytes_out": 536779,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=0 queue=0"
+      }
+    ],
+    "review_queue_len": 0,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "version_vector_random",
+    "metrics": {
+      "conflicts": 152,
+      "high_risk_conflicts": 43,
+      "silent_overwrites": 152,
+      "high_risk_silent_overwrites": 43,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 243,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 91,
+      "high_risk_conflicts": 24,
+      "silent_overwrites": 91,
+      "high_risk_silent_overwrites": 24,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 0,
+      "contested_field_merges": 0,
+      "accepted": 131,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 126238,
+      "bytes_out": 565302,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=0 queue=0"
+      }
+    ],
+    "review_queue_len": 0,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  },
+  {
+    "policy": "crdt_field_merge",
+    "metrics": {
+      "conflicts": 152,
+      "high_risk_conflicts": 43,
+      "silent_overwrites": 125,
+      "high_risk_silent_overwrites": 36,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 152,
+      "contested_field_merges": 125,
+      "accepted": 243,
+      "duplicates_suppressed": 27,
+      "stale_rejected": 0
+    },
+    "live_counters": {
+      "conflicts": 91,
+      "high_risk_conflicts": 24,
+      "silent_overwrites": 80,
+      "high_risk_silent_overwrites": 20,
+      "manual_reviews": 0,
+      "high_risk_manual_reviews": 0,
+      "merges": 91,
+      "contested_field_merges": 80,
+      "accepted": 131,
+      "duplicates_suppressed": 0,
+      "stale_rejected": 0,
+      "sync_requests": 131,
+      "bytes_in": 128047,
+      "bytes_out": 595848,
+      "server_errors": 0
+    },
+    "counters_agree": false,
+    "invariants": [
+      {
+        "invariant": "I1_high_integrity_never_auto_resolved",
+        "passed": true,
+        "detail": "n/a for this policy"
+      },
+      {
+        "invariant": "I2_both_branches_retained",
+        "passed": true,
+        "detail": "0 record(s) missing a branch"
+      },
+      {
+        "invariant": "I3_convergence_after_reconnect",
+        "passed": true,
+        "detail": "0 entity/display pair(s) divergent"
+      },
+      {
+        "invariant": "I4_duplicate_delivery_idempotent",
+        "passed": true,
+        "detail": "27 duplicate(s) suppressed, 0 re-applied"
+      },
+      {
+        "invariant": "I5_queued_conflicts_persisted",
+        "passed": true,
+        "detail": "audit=0 queue=0"
+      }
+    ],
+    "review_queue_len": 0,
+    "audit_records": 422,
+    "transport": {
+      "dropped": 7,
+      "duplicated": 7,
+      "reordered": 8,
+      "failed": 0
+    },
+    "clients": {
+      "local_edits": 300,
+      "superseded": 25,
+      "sync_attempts": 150,
+      "sync_failures": 47,
+      "updates_sent": 275
+    },
+    "crashed": true
+  }
+]
