@@ -1,20 +1,35 @@
 145800 runs, 14580 paired runs per policy
 
-policy                   hi-risk silent  total silent   reviews
-----------------------------------------------------------------
-last_write_wins                  1.8472        5.2919    0.0000
-cloud_preferred                  1.8472        5.2919    0.0000
-display_preferred                1.8472        5.2920    0.0000
-version_vector_causal            1.8472        5.2920    0.0000
-crdt_field_merge                 0.9134        2.4477    0.0000
-manual_review_all                0.0000        0.0000    5.0464
-domain_aware                     0.0000        3.4447    1.7509
+policy                       hi-risk silent  total silent   reviews
+--------------------------------------------------------------------
+last_write_wins                      1.8472        5.2919    0.0000
+cloud_preferred                      1.8472        5.2919    0.0000
+display_preferred                    1.8472        5.2920    0.0000
+version_vector_causal                1.8472        5.2920    0.0000
+version_vector_cloud_wins            1.8472        5.2919    0.0000
+version_vector_display_wins          1.8472        5.2919    0.0000
+version_vector_random                1.8472        5.2919    0.0000
+crdt_field_merge                     0.9134        2.4477    0.0000
+manual_review_all                    0.0000        0.0000    5.0464
+domain_aware                         0.0000        3.4447    1.7509
 
 ================================================================
 PAIRED COMPARISONS - high-risk silent overwrites
 ================================================================
 
 version_vector_causal vs last_write_wins
+  mean difference    : +0.000000  (+0.0% relative)
+  identical outcomes : 100.0% of runs
+
+version_vector_cloud_wins vs last_write_wins
+  mean difference    : +0.000000  (+0.0% relative)
+  identical outcomes : 100.0% of runs
+
+version_vector_display_wins vs last_write_wins
+  mean difference    : +0.000000  (+0.0% relative)
+  identical outcomes : 100.0% of runs
+
+version_vector_random vs last_write_wins
   mean difference    : +0.000000  (+0.0% relative)
   identical outcomes : 100.0% of runs
 
@@ -30,5 +45,5 @@ domain_aware vs last_write_wins
 PROTECTION-BURDEN FRONTIER
 ================================================================
 policies reaching ZERO high-risk silent overwrites:
-  manual_review_all          5.0464 reviews/run   reduction   0.0%
-  domain_aware               1.7509 reviews/run   reduction  65.3%
+  manual_review_all              5.0464 reviews/run   reduction   0.0%
+  domain_aware                   1.7509 reviews/run   reduction  65.3%

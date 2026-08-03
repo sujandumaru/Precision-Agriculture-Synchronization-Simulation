@@ -9,10 +9,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ORDER = ["last_write_wins","cloud_preferred","display_preferred",
-         "version_vector_causal","crdt_field_merge","manual_review_all","domain_aware"]
+         "version_vector_causal","version_vector_cloud_wins","version_vector_display_wins",
+         "version_vector_random","crdt_field_merge","manual_review_all","domain_aware"]
 LABEL = {"last_write_wins":"Last-write-wins","cloud_preferred":"Cloud-preferred",
-         "display_preferred":"Display-preferred","version_vector_causal":"Version-vector causal",
-         "crdt_field_merge":"CRDT field merge","manual_review_all":"Manual-review-all",
+         "display_preferred":"Display-preferred","version_vector_causal":"Causal, node-order",
+         "version_vector_cloud_wins":"Causal, cloud-authority",
+         "version_vector_display_wins":"Causal, display-authority",
+         "version_vector_random":"Causal, pseudo-random",
+         "crdt_field_merge":"Field-wise register merge","manual_review_all":"Manual-review-all",
          "domain_aware":"Domain-aware"}
 
 def load(p):
@@ -60,10 +64,10 @@ def main():
         ax.annotate(txt,(g["x"],g["y"]),textcoords="offset points",
                     xytext=(dx,dy),fontsize=8.4,ha=ha,va="center",linespacing=1.35)
     ax.set_xlabel("Manual reviews per run")
-    ax.set_ylabel("High-risk silent overwrites per run")
+    ax.set_ylabel("High-integrity records discarded per run")
     ax.grid(alpha=0.25,linestyle=":"); ax.set_axisbelow(True)
     ax.set_xlim(-0.9,11.4); ax.set_ylim(-0.85,3.95)
-    fig.tight_layout(); fig.savefig(f"{a.out}/fig2_protection_burden.png",dpi=400); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{a.out}/fig2_protection_burden.png",dpi=600); plt.close(fig)
 
     # ---- Fig 3: does causal detection help as the entity mix shifts?
     S=defaultdict(lambda: defaultdict(list))
@@ -84,15 +88,15 @@ def main():
                 markersize=ms,linewidth=lw,
                 markerfacecolor=c,markeredgecolor="white",markeredgewidth=0.7)
     ax.set_xlabel("High-integrity update share (%)")
-    ax.set_ylabel("High-risk silent overwrites per run")
+    ax.set_ylabel("High-integrity records discarded per run")
     ax.set_xticks([float(s)*100 for s in shares])
     ax.legend(frameon=False,fontsize=9); ax.grid(alpha=0.25,linestyle=":"); ax.set_axisbelow(True)
-    fig.tight_layout(); fig.savefig(f"{a.out}/fig3_entity_mix.png",dpi=400); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{a.out}/fig3_entity_mix.png",dpi=600); plt.close(fig)
 
     print("figures written to",a.out)
     for p in ORDER:
-        if p in P: print(f"  {LABEL[p]:22} reviews={mean(P[p]['mr']):7.4f}  hi-risk={mean(P[p]['hr']):7.4f}")
-    print("\nFig3 data (high-risk silent overwrites by entity mix):")
+        if p in P: print(f"  {LABEL[p]:22} reviews={mean(P[p]['mr']):7.4f}  hi-integrity={mean(P[p]['hr']):7.4f}")
+    print("\nFig3 data (high-integrity records discarded by entity mix):")
     for p in style:
         if p in S: print(f"  {LABEL[p]:22} " + "  ".join(f"{s}:{mean(S[p][s]):.3f}" for s in shares))
 
