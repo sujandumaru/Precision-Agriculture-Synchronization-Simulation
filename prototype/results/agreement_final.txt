@@ -37,3 +37,33 @@ manual-review reduction vs manual_review_all:
              simulation=True  prototype=True
   [AGREE   ] domain_aware loses fewer high-risk records than LWW
              simulation=True  prototype=True
+
+==============================================================================
+CONFLICT-RATE RATIO BY FACTOR (last_write_wins)
+==============================================================================
+factor                     level           sim    proto    ratio
+------------------------------------------------------------------------------
+fleet_size                 2             0.183    0.633    3.47x
+fleet_size                 5             1.358    3.476    2.56x
+fleet_size                 10            5.051   11.767    2.33x
+
+sync_interval_minutes      1             1.550    3.891    2.51x
+sync_interval_minutes      5             1.986    4.866    2.45x
+sync_interval_minutes      15            3.055    7.119    2.33x
+
+connectivity               good          0.819    2.298    2.81x
+connectivity               moderate      1.777    4.261    2.40x
+connectivity               poor          3.996    9.317    2.33x
+
+updates_per_display_day    2             0.096    0.324    3.37x
+updates_per_display_day    8             1.050    2.812    2.68x
+updates_per_display_day    20            5.445   12.739    2.34x
+
+conflict_bias              0.01          2.135    5.133    2.40x
+conflict_bias              0.05          2.195    5.289    2.41x
+conflict_bias              0.1           2.261    5.454    2.41x
+
+high_risk_update_share     0.15          2.198    5.356    2.44x
+high_risk_update_share     0.3           2.060    4.981    2.42x
+high_risk_update_share     0.5           2.333    5.539    2.37x
+

@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1400" viewBox="0 0 2400 1400" role="img" aria-labelledby="title desc">
+  <title id="title">Three-tier precision-agriculture synchronization reference architecture</title>
+  <desc id="desc">Cloud farm-management, rural connectivity, and embedded display layers. Setup data synchronizes bidirectionally between the embedded display and the cloud through the connectivity layer; work data is uploaded one way along the same connectivity path; high-integrity conflicts are routed to a manual review queue. Flow types are distinguished by line pattern as well as by colour, so the figure remains legible in greyscale.</desc>
+
+  <defs>
+    <!-- Every arrowhead is a marker-end on a path travelling in the arrow's own
+         direction: no marker-start, no orient="auto-start-reverse" (SVG 2), so
+         orientation is unambiguous in every renderer and print RIP.
+         refX="1" puts the triangle BASE at the path end, so the shaft meets the
+         head where the head is at full width and never protrudes past the point. -->
+    <marker id="blueArrow" markerWidth="26" markerHeight="26" refX="1" refY="13" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L26,13 L0,26 Z" fill="#0a3f78"/>
+    </marker>
+    <marker id="grayArrow" markerWidth="24" markerHeight="24" refX="1" refY="12" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L24,12 L0,24 Z" fill="#70757a"/>
+    </marker>
+    <marker id="orangeArrow" markerWidth="26" markerHeight="26" refX="1" refY="13" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L26,13 L0,26 Z" fill="#e87500"/>
+    </marker>
+    <marker id="redArrow" markerWidth="26" markerHeight="26" refX="1" refY="13" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L26,13 L0,26 Z" fill="#d92216"/>
+    </marker>
+
+    <style>
+      .layer-title { font: 700 46px Arial, Helvetica, sans-serif; fill: #111820; }
+      .box { fill: #ffffff; stroke: #0b3264; stroke-width: 6; }
+      .box-text { font: 700 36px Arial, Helvetica, sans-serif; fill: #101820; text-anchor: middle; }
+      .box-text-small { font: 700 33px Arial, Helvetica, sans-serif; fill: #101820; text-anchor: middle; }
+      .flow-label { font: 700 32px Arial, Helvetica, sans-serif; fill: #0a3f78; }
+      .legend { font: 500 33px Arial, Helvetica, sans-serif; fill: #111820; }
+
+      /* Line pattern, not colour, carries the flow-type distinction. */
+      .gray-flow   { fill: none; stroke: #70757a; stroke-width: 6;  stroke-dasharray: 10 8;       stroke-linecap: butt; stroke-linejoin: round; }
+      .blue-flow   { fill: none; stroke: #0a3f78; stroke-width: 10;                               stroke-linecap: butt; stroke-linejoin: round; }
+      .orange-flow { fill: none; stroke: #e87500; stroke-width: 9;  stroke-dasharray: 30 16;      stroke-linecap: butt; stroke-linejoin: round; }
+      .red-flow    { fill: none; stroke: #d92216; stroke-width: 9;  stroke-dasharray: 30 12 8 12; stroke-linecap: butt; stroke-linejoin: round; }
+      .tip         { stroke-dasharray: none; }
+    </style>
+  </defs>
+
+  <rect width="2400" height="1400" fill="#ffffff"/>
+
+  <!-- Layer backgrounds: flat fills, no gradients, no filters -->
+  <rect x="18" y="18" width="2364" height="570" rx="34" fill="#e8f1fc" stroke="#76a5d4" stroke-width="3"/>
+  <rect x="18" y="610" width="2364" height="200" rx="34" fill="#f4f4f4" stroke="#c7c7c7" stroke-width="3"/>
+  <rect x="18" y="832" width="2364" height="310" rx="34" fill="#eef7ea" stroke="#9cbe8d" stroke-width="3"/>
+
+  <text class="layer-title" x="50" y="78">Cloud farm-management platform layer</text>
+  <text class="layer-title" x="50" y="676">Connectivity layer</text>
+  <text class="layer-title" x="50" y="900">Embedded display layer</text>
+
+  <!-- Cloud component boxes -->
+  <rect class="box" x="70" y="150" width="450" height="150" rx="28"/>
+  <text class="box-text" x="295" y="206">
+    <tspan x="295" dy="0">Central</tspan>
+    <tspan x="295" dy="45">setup-data store</tspan>
+  </text>
+
+  <rect class="box" x="650" y="150" width="360" height="150" rx="28"/>
+  <text class="box-text" x="830" y="206">
+    <tspan x="830" dy="0">Conflict</tspan>
+    <tspan x="830" dy="45">detection</tspan>
+  </text>
+
+  <rect class="box" x="1170" y="150" width="560" height="150" rx="28"/>
+  <text class="box-text-small" x="1450" y="205">
+    <tspan x="1450" dy="0">Conflict-resolution policy</tspan>
+    <tspan x="1450" dy="43">(domain-aware shown)</tspan>
+  </text>
+
+  <rect class="box" x="1900" y="150" width="430" height="150" rx="28"/>
+  <text class="box-text-small" x="2115" y="192">
+    <tspan x="2115" dy="0">Web / mobile</tspan>
+    <tspan x="2115" dy="41">management UI</tspan>
+    <tspan x="2115" dy="38" font-size="30" font-weight="500">(reference interface)</tspan>
+  </text>
+
+  <rect class="box" x="1215" y="390" width="470" height="150" rx="28"/>
+  <text class="box-text-small" x="1450" y="440">
+    <tspan x="1450" dy="0">Manual review queue</tspan>
+    <tspan x="1450" dy="41">for high-integrity</tspan>
+    <tspan x="1450" dy="41">conflicts</tspan>
+  </text>
+
+  <!-- Cloud internal data flows. Bidirectional connectors are a shaft plus a
+       3-unit orientation stub at each end; the stub lies under the shaft. -->
+  <path class="gray-flow" d="M543 225 L627 225"/>
+  <path class="gray-flow tip" d="M546 225 L543 225" marker-end="url(#grayArrow)"/>
+  <path class="gray-flow tip" d="M624 225 L627 225" marker-end="url(#grayArrow)"/>
+
+  <path class="gray-flow" d="M1033 225 L1147 225"/>
+  <path class="gray-flow tip" d="M1036 225 L1033 225" marker-end="url(#grayArrow)"/>
+  <path class="gray-flow tip" d="M1144 225 L1147 225" marker-end="url(#grayArrow)"/>
+
+  <path class="gray-flow" d="M1730 258 L1877 258" marker-end="url(#grayArrow)"/>
+
+  <path class="gray-flow" d="M295 127 L295 112 L2115 112 L2115 127"/>
+  <path class="gray-flow tip" d="M295 124 L295 127" marker-end="url(#grayArrow)"/>
+  <path class="gray-flow tip" d="M2115 124 L2115 127" marker-end="url(#grayArrow)"/>
+
+  <!-- High-integrity conflicts routed to manual review, and back -->
+  <path class="red-flow" d="M1450 325 L1450 365"/>
+  <path class="red-flow tip" d="M1450 328 L1450 325" marker-end="url(#redArrow)"/>
+  <path class="red-flow tip" d="M1450 362 L1450 365" marker-end="url(#redArrow)"/>
+
+  <!-- Connectivity component -->
+  <rect class="box" x="690" y="655" width="620" height="125" rx="28"/>
+  <text class="box-text-small" x="1000" y="702">
+    <tspan x="1000" dy="0">Intermittent connectivity</tspan>
+    <tspan x="1000" dy="40" font-size="30" font-weight="500">(good / moderate / poor profiles)</tspan>
+  </text>
+
+  <!-- Directional setup-data synchronization -->
+  <path class="blue-flow" d="M830 655 L830 325" marker-end="url(#blueArrow)"/>
+  <text class="flow-label" x="862" y="430">
+    <tspan x="862" dy="0">display-originated</tspan>
+    <tspan x="862" dy="40">updates</tspan>
+  </text>
+
+  <!-- Line jump at x=830 so the two setup-data paths read as crossing, not joining -->
+  <path class="blue-flow" d="M295 300 L295 600 L805 600 A25 25 0 0 1 855 600 L1130 600 L1130 630" marker-end="url(#blueArrow)"/>
+  <text class="flow-label" x="330" y="512">
+    <tspan x="330" dy="0">cloud-state deltas /</tspan>
+    <tspan x="330" dy="40">sync responses</tspan>
+  </text>
+
+  <!-- Embedded component boxes -->
+  <rect class="box" x="60" y="935" width="390" height="150" rx="28"/>
+  <text class="box-text" x="255" y="1022">Display controller</text>
+
+  <rect class="box" x="550" y="905" width="570" height="210" rx="28"/>
+  <text class="box-text-small" x="835" y="962">
+    <tspan x="835" dy="0">Persistent change log and</tspan>
+    <tspan x="835" dy="41">pending-update queue</tspan>
+    <tspan x="835" dy="47" font-size="32" font-weight="500">create / edit / delete events</tspan>
+  </text>
+
+  <rect class="box" x="1230" y="935" width="410" height="150" rx="28"/>
+  <text class="box-text" x="1435" y="993">
+    <tspan x="1435" dy="0">Local</tspan>
+    <tspan x="1435" dy="45">setup-data store</tspan>
+  </text>
+
+  <rect class="box" x="1830" y="935" width="510" height="150" rx="28"/>
+  <text class="box-text-small" x="2085" y="993">
+    <tspan x="2085" dy="0">ISOBUS implement</tspan>
+    <tspan x="2085" dy="43">and machine context</tspan>
+  </text>
+
+  <!-- Downstream half of cloud-to-display synchronization -->
+  <path class="blue-flow" d="M1130 780 L1130 850 L1435 850 L1435 910" marker-end="url(#blueArrow)"/>
+
+  <!-- Embedded internal data flows -->
+  <path class="gray-flow" d="M473 1010 L527 1010"/>
+  <path class="gray-flow tip" d="M476 1010 L473 1010" marker-end="url(#grayArrow)"/>
+  <path class="gray-flow tip" d="M524 1010 L527 1010" marker-end="url(#grayArrow)"/>
+
+  <path class="gray-flow" d="M1143 1010 L1207 1010"/>
+  <path class="gray-flow tip" d="M1146 1010 L1143 1010" marker-end="url(#grayArrow)"/>
+  <path class="gray-flow tip" d="M1204 1010 L1207 1010" marker-end="url(#grayArrow)"/>
+
+  <path class="gray-flow" d="M1663 1010 L1807 1010"/>
+  <path class="gray-flow tip" d="M1666 1010 L1663 1010" marker-end="url(#grayArrow)"/>
+  <path class="gray-flow tip" d="M1804 1010 L1807 1010" marker-end="url(#grayArrow)"/>
+
+  <!-- Unidirectional work-data upload: implement to connectivity, connectivity to cloud -->
+  <path class="orange-flow" d="M2085 935 L2085 745 L1335 745" marker-end="url(#orangeArrow)"/>
+  <path class="orange-flow" d="M1240 655 L1240 632 L2115 632 L2115 325" marker-end="url(#orangeArrow)"/>
+
+  <!-- Legend: two rows of two -->
+  <g transform="translate(70,1185)">
+    <path class="blue-flow" d="M25 42 L105 42"/>
+    <path class="blue-flow tip" d="M28 42 L25 42" marker-end="url(#blueArrow)"/>
+    <path class="blue-flow tip" d="M102 42 L105 42" marker-end="url(#blueArrow)"/>
+    <text class="legend" x="172" y="32">
+      <tspan x="172" dy="0">setup-data synchronization</tspan>
+      <tspan x="172" dy="41">(directional arrows show each flow)</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(1230,1185)">
+    <path class="red-flow" d="M25 42 L105 42"/>
+    <path class="red-flow tip" d="M28 42 L25 42" marker-end="url(#redArrow)"/>
+    <path class="red-flow tip" d="M102 42 L105 42" marker-end="url(#redArrow)"/>
+    <text class="legend" x="172" y="32">
+      <tspan x="172" dy="0">high-integrity conflicts</tspan>
+      <tspan x="172" dy="41">routed to manual review</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(70,1300)">
+    <path class="orange-flow" d="M0 42 L105 42" marker-end="url(#orangeArrow)"/>
+    <text class="legend" x="172" y="32">
+      <tspan x="172" dy="0">one-way work-data upload</tspan>
+      <tspan x="172" dy="41">(not evaluated)</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(1230,1300)">
+    <path class="gray-flow" d="M0 42 L107 42" marker-end="url(#grayArrow)"/>
+    <text class="legend" x="172" y="32">
+      <tspan x="172" dy="0">internal</tspan>
+      <tspan x="172" dy="41">data flow</tspan>
+    </text>
+  </g>
+</svg>

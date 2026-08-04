@@ -9,8 +9,11 @@ architecture.
 
 | Directory | What it is |
 |---|---|
-| [`prototype/`](prototype/) | An executable implementation: separate operating-system processes, HTTP over real sockets, durable storage, version-vector concurrency detection, fault injection, and crash recovery. Ten conflict-resolution policies across a full factorial design. |
-| [`simulation/`](simulation/) | A discrete-event model of the same architecture, evaluating the five originally published policies. Used as an independent cross-check on the policy comparison. |
+| [`prototype/`](prototype/) | An executable implementation: separate operating-system processes, HTTP over real sockets, durable storage, version-vector concurrency detection, fault injection, and crash recovery. **Ten** conflict-resolution policies across a full factorial design, **145,800 runs**. This is the experiment the manuscript's policy tables report. |
+| [`simulation/`](simulation/) | A discrete-event model of the same architecture, evaluating the **five** originally published policies over the same 729-cell design, **72,900 runs**. Used as an independent cross-check on the policy comparison. |
+
+The two run counts differ because the policy counts differ, not because the
+designs differ. Both sweep the same 729 cells with 20 replications.
 
 Python 3.10+ standard library only for the prototype. The simulation needs
 Matplotlib for figure generation.

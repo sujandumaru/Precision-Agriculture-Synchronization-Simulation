@@ -15,15 +15,31 @@ import random
 from collections import defaultdict
 from pathlib import Path
 from statistics import mean
-from simulation.make_paper_figures import write_analysis_outputs
-from simulation.models import (
-    Event,
-    PendingUpdate,
-    Scenario,
-    SimulationRealization,
-    build_entities,
-    scenario_grid,
-)
+# Importable both as a package from the repository root
+# (python -m simulation.simulate_sync) and as a script from inside this
+# directory (cd simulation && python simulate_sync.py), which is what the
+# README documents. The package-absolute form alone raised ModuleNotFoundError
+# on a fresh clone after the directory reorganisation.
+try:
+    from simulation.make_paper_figures import write_analysis_outputs
+    from simulation.models import (
+        Event,
+        PendingUpdate,
+        Scenario,
+        SimulationRealization,
+        build_entities,
+        scenario_grid,
+    )
+except ModuleNotFoundError:
+    from make_paper_figures import write_analysis_outputs
+    from models import (
+        Event,
+        PendingUpdate,
+        Scenario,
+        SimulationRealization,
+        build_entities,
+        scenario_grid,
+    )
 
 
 def read_config(path: Path) -> dict:

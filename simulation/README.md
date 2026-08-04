@@ -2,6 +2,20 @@
 
 This simulator evaluates abstract synchronization policies for precision-agriculture setup data under intermittent connectivity.
 
+## Scope, and how it relates to `../prototype/`
+
+This directory is the **discrete-event model**: five policies over 729 cells x 20
+replications = **72,900 runs**. It is not the main experiment. [`../prototype/`](../prototype/)
+is an executable implementation of the same architecture evaluating **ten** policies
+over the same 729-cell design, **145,800 runs**, and that is what the manuscript's
+policy tables report.
+
+The two exist so the policy comparison can be checked across independent
+implementations. They agree to 0.4 points on the manual-review reduction (64.9%
+simulated, 65.3% measured) while differing 2.41x on absolute conflict rates. The
+differing row counts below are therefore expected, not a discrepancy: 72,900 is five
+policies, 145,800 is ten.
+
 It is intentionally framed as a **sensitivity analysis**, not a field-validated model. Public sources document Data Sync setup entities, near-real-time synchronization behavior, transaction-log visibility, precision-agriculture adoption, and rural connectivity barriers. They do not publish machine-level cellular traces, real conflict rates, or proprietary synchronization logs. The simulation therefore sweeps transparent parameter ranges instead of claiming one parameter set is representative of all farms.
 
 ## Run
@@ -12,10 +26,16 @@ Install the plotting dependency once:
 python -m pip install -r requirements.txt
 ```
 
-Then run the simulation and figure generation:
+Then run the simulation and figure generation, either from inside this directory:
 
 ```powershell
 python simulate_sync.py --config config.json --out results
+```
+
+or as a module from the repository root:
+
+```powershell
+python -m simulation.simulate_sync --config simulation/config.json --out simulation/results
 ```
 
 The core simulation uses the Python standard library. The one-command workflow

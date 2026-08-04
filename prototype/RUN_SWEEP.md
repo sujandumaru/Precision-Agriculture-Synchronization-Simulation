@@ -19,12 +19,11 @@ python --version
 
 3.10 or newer. Nothing to install.
 
-## IMPORTANT: v3 changes the experiment
+## Do not mix output directories
 
-The synchronization semantics changed, so **results from the previous sweep are not
-comparable and must not be mixed with new ones.** Write to a fresh directory.
-
-What changed:
+The synchronization semantics changed during development, so results from any earlier
+sweep are not comparable with these and must not be mixed. Always write to a fresh
+directory. What changed, relative to the earliest version of the experiment:
 
 - Clients now poll for cloud changes even with nothing pending. Previously a client with
   no local edits never pulled, and the test harness copied cloud state into clients before
@@ -42,15 +41,16 @@ What changed:
 ## Run it (auto-retrying, recommended)
 
 Ten policies, 729 cells, 20 replications = **145,800 runs**. Budget about **3.5 hours**
-on four cores. Pull-only synchronization means far more requests per run than v2.
+on four cores. Pull-only synchronization means far more requests per run than the original
+push-only design.
 
 ```powershell
-cd "$env:USERPROFILE\OneDrive\Documents\EB2-NIW\prototype"
-mkdir C:\proto_v3 -Force
+cd <path-to-clone>\prototype
+mkdir C:\proto_run -Force
 $target = 145800
 
 for ($pass = 1; $pass -le 40; $pass++) {
-  $n = (Get-ChildItem C:\proto_v3\prototype_runs_s*.csv -ErrorAction SilentlyContinue |
+  $n = (Get-ChildItem C:\proto_run\prototype_runs_s*.csv -ErrorAction SilentlyContinue |
         ForEach-Object { (Get-Content $_).Count - 1 } | Measure-Object -Sum).Sum
   if (-not $n) { $n = 0 }
   if ($n -ge $target) { Write-Host "COMPLETE: $n runs"; break }
@@ -58,11 +58,11 @@ for ($pass = 1; $pass -le 40; $pass++) {
 
   $procs = 0..3 | ForEach-Object {
     Start-Process python -ArgumentList @(
-      "sweep.py","--cells","all","--reps","20","--out","C:\proto_v3",
+      "sweep.py","--cells","all","--reps","20","--out","C:\proto_run",
       "--port",(8801 + $_),"--shard",$_,"--nshards","4","--resume","--new-baselines"
     ) -NoNewWindow -PassThru `
-      -RedirectStandardOutput "C:\proto_v3\shard$_.out.txt" `
-      -RedirectStandardError  "C:\proto_v3\shard$_.err.txt"
+      -RedirectStandardOutput "C:\proto_run\shard$_.out.txt" `
+      -RedirectStandardError  "C:\proto_run\shard$_.err.txt"
   }
   $procs | Wait-Process
 }
@@ -102,13 +102,8 @@ Not `C:\proto_run\server_s*\` — those are working SQLite files.
 
 ## Optional extras, once the main sweep is verified
 
-Add the two causal baselines (7 policies, ~40% longer):
-
-```powershell
-python sweep.py --cells all --reps 20 --out C:\proto_run_baselines --port 8850 --new-baselines --resume
-```
-
-Measure what the simulation's abstraction omits, by enabling the fault layer:
+The main command above already passes `--new-baselines`, so all ten policies are
+included. Measure what the simulation's abstraction omits by enabling the fault layer:
 
 ```powershell
 python sweep.py --cells all --reps 5 --out C:\proto_run_faults --port 8860 --faults --resume

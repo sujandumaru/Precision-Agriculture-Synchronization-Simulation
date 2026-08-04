@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  prototype:
+    name: Prototype pre-flight and analysis (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      # Standard library only: no install step, by design.
+      - name: Pre-flight checks
+        working-directory: prototype
+        run: |
+          python preflight.py | tee preflight.out
+          grep -q "PRE-FLIGHT PASSED" preflight.out
+
+      # Guards the failure this job was added for: the reported policy table
+      # silently dropping policies that the sweep actually ran.
+      - name: Analysis scripts run against the archived results
+        working-directory: prototype
+        run: |
+          python baselines.py --prototype results/ | tee baselines.out
+          python agreement.py --prototype results/ \
+            --simulation ../simulation/results/raw_runs.csv > agreement.out
+          for p in last_write_wins cloud_preferred display_preferred \
+                   version_vector_causal version_vector_cloud_wins \
+                   version_vector_display_wins version_vector_random \
+                   crdt_field_merge manual_review_all domain_aware; do
+            grep -q "^$p " baselines.out || { echo "missing policy: $p"; exit 1; }
+          done
+
+  simulation:
+    name: Simulation entry points (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r simulation/requirements.txt
+
+      # A single-cell, single-replication config. The point is that the
+      # documented command starts and completes, not that the numbers mean
+      # anything; the full sweep is far too long for CI.
+      - name: Build a reduced config
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          c = json.loads(pathlib.Path("simulation/config.json").read_text())
+          c["replications"] = 1
+          c["entity_count"] = 20
+          s = c["scenarios"]
+          for k in s:
+              s[k] = s[k][:1]
+          pathlib.Path("/tmp/ci_config.json").write_text(json.dumps(c))
+          PY
+
+      # Regression guard: the package-absolute imports alone raised
+      # ModuleNotFoundError on a fresh clone when run the documented way.
+      - name: Documented invocation, from inside simulation/
+        working-directory: simulation
+        run: python simulate_sync.py --config /tmp/ci_config.json --out /tmp/out_script
+
+      - name: Package invocation, from the repository root
+        run: python -m simulation.simulate_sync --config /tmp/ci_config.json --out /tmp/out_module
+
+  archive:
+    name: Archived result files are complete
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Row counts match the reported design
+        run: |
+          python - <<'PY'
+          import csv, glob, collections, sys
+
+          rows = []
+          for f in sorted(glob.glob("prototype/results/prototype_runs_s*.csv")):
+              rows += list(csv.DictReader(open(f)))
+          by = collections.Counter(r["policy"] for r in rows)
+          fail = []
+          if len(rows) != 145800:
+              fail.append(f"prototype rows {len(rows)} != 145800")
+          if len(by) != 10:
+              fail.append(f"prototype policies {len(by)} != 10")
+          for p, n in sorted(by.items()):
+              if n != 14580:
+                  fail.append(f"{p} has {n} runs, expected 14580")
+
+          sim = sum(1 for _ in open("simulation/results/raw_runs.csv")) - 1
+          if sim != 72900:
+              fail.append(f"simulation rows {sim} != 72900")
+
+          for f in fail:
+              print(f)
+          sys.exit(1 if fail else 0)
+          PY

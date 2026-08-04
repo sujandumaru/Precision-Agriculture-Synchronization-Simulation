@@ -139,6 +139,57 @@ def main():
         print(f"  [{verdict:8}] {name}")
         print(f"             simulation={s_ok}  prototype={p_ok}")
 
+    by_factor(proto, sim)
+
+
+FACTORS = ["fleet_size", "sync_interval_minutes", "connectivity",
+           "updates_per_display_day", "conflict_bias", "high_risk_update_share"]
+CONNECTIVITY_ORDER = ["good", "moderate", "poor"]
+
+
+def _level_sort(factor):
+    if factor == "connectivity":
+        return lambda v: CONNECTIVITY_ORDER.index(v)
+    return float
+
+
+def by_factor(proto, sim, policy="last_write_wins"):
+    """Prototype-to-simulation conflict-rate ratio, stratified by each factor.
+
+    The two implementations disagree on absolute conflict rates while agreeing
+    to 0.4 points on the policy comparison the paper argues. This table is how
+    that disagreement is characterised, so it is derived from the archived runs
+    rather than quoted from a development sweep.
+    """
+    def collect(rows):
+        out = defaultdict(list)
+        for r in rows:
+            if r["policy"] != policy:
+                continue
+            for f in FACTORS:
+                out[(f, r[f])].append(float(r["conflicts"]))
+        return out
+
+    P, S = collect(proto), collect(sim)
+    if not P or not S:
+        return
+
+    print("\n" + "=" * 78)
+    print(f"CONFLICT-RATE RATIO BY FACTOR ({policy})")
+    print("=" * 78)
+    print(f"{'factor':26} {'level':10} {'sim':>8} {'proto':>8} {'ratio':>8}")
+    print("-" * 78)
+    for f in FACTORS:
+        levels = sorted({lv for (ff, lv) in P if ff == f}, key=_level_sort(f))
+        for lv in levels:
+            if (f, lv) not in S:
+                continue
+            s, p = mean(S[(f, lv)]), mean(P[(f, lv)])
+            if s == 0:
+                continue
+            print(f"{f:26} {lv:10} {s:8.3f} {p:8.3f} {p / s:7.2f}x")
+        print()
+
 
 if __name__ == "__main__":
     main()

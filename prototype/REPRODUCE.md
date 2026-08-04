@@ -58,8 +58,13 @@ python cloud_server.py --failpoint before_commit --failpoint-at 3 ...
 
 ## Determinism
 
-All seeds derive from a fixed master seed. Two independent full executions agreed on
-145,787 of 145,800 runs. The thirteen differing runs arise from wall-clock tiebreaks in
-the timestamp-dependent policies and from transient transport retries under concurrent
-load; no policy mean shifted by more than 0.0002 records per run. The artifact is
-reproducible at the precision reported in the paper, not bit-for-bit.
+All seeds derive from a fixed master seed. Reproduction is exact at the precision
+reported in the paper rather than bit-for-bit: the timestamp-dependent policies compare
+wall-clock values, so two writes landing in the same millisecond may be ordered
+differently between executions. This affects a small number of runs and no reported mean
+at the precision shown.
+
+An earlier draft of this file quantified that as "145,787 of 145,800 runs agreed across
+two executions." The figure is not stated here because the two executions it came from
+were produced by code that changed between them and are not archived. It should not be
+reinstated without two clean runs of the frozen code in this repository.

@@ -1,4 +1,4 @@
-# Domain-Aware Synchronization Prototype (v0.1)
+# Domain-Aware Synchronization Prototype
 
 A clean-room, executable implementation of the reference architecture described in
 *Domain-Aware Synchronization of Precision-Agriculture Setup Data Between Embedded
@@ -24,11 +24,14 @@ Python 3.10+ standard library only. This is deliberate: a reviewer can reproduce
 with no install step.
 
 ```bash
-python3 run_experiment.py                    # clean run, all 7 policies
+python3 run_experiment.py                    # clean run, all ten policies
 python3 run_experiment.py --crash-at 0.5     # SIGKILL the cloud at 50% of the run
 ```
 
 ## Policies
+
+Ten, defined in `policies.py` as `POLICIES`. Every script that reports on a sweep
+validates its own list against that tuple and refuses to run if the two disagree.
 
 | # | Policy | Origin |
 |---|--------|--------|
@@ -38,11 +41,17 @@ python3 run_experiment.py --crash-at 0.5     # SIGKILL the cloud at 50% of the r
 | 4 | `manual_review_all` | in the paper |
 | 5 | `domain_aware` | in the paper (proposed) |
 | 6 | `version_vector_causal` | **new baseline** |
-| 7 | `crdt_field_merge` | **new baseline** |
+| 7 | `version_vector_cloud_wins` | **new baseline**, tiebreak variant |
+| 8 | `version_vector_display_wins` | **new baseline**, tiebreak variant |
+| 9 | `version_vector_random` | **new baseline**, tiebreak variant |
+| 10 | `crdt_field_merge` | **new baseline** |
 
 The causal variants exist because the paper cites Parker et al. (version vectors) and
 Shapiro et al. (CRDTs) in related work but would otherwise benchmark only against
-timestamp and authority rules. `crdt_field_merge` is a field-wise last-write-wins
+timestamp and authority rules. Causal detection must be followed by *some* tiebreak,
+so policies 6 to 9 apply four different ones — node order, cloud authority, display
+authority, pseudo-random — to show the result is invariant to that choice rather than
+an artifact of one arbitrary rule. `crdt_field_merge` is a field-wise last-write-wins
 register merge inspired by CRDT designs; its convergence algebra was not formally
 established here, so it is not claimed to be a general conflict-free replicated data type.
 
@@ -110,7 +119,7 @@ That the two agree exactly on a clean run is itself a check that the log is comp
 | File | Role |
 |---|---|
 | `common.py` | version vectors, content hashing, `fsync`ed audit log, SQLite helpers |
-| `policies.py` | the seven conflict-resolution policies |
+| `policies.py` | the ten conflict-resolution policies, declared once as `POLICIES` |
 | `cloud_server.py` | canonical store, conflict detector, review queue, delta sync |
 | `display_client.py` | local store, change log, coalescing, periodic sync |
 | `transport.py` | fault injection: drop, duplicate, reorder, partition |
@@ -120,12 +129,11 @@ That the two agree exactly on a clean run is itself a check that the log is comp
 
 ## Status and honest limits
 
-This is **v0.1**. It demonstrates the architecture end to end and produces the
-comparison above. It is not yet:
+It demonstrates the architecture end to end and produces the comparison above
+across the full 729-cell design. It is not yet:
 
 - calibrated against measured rural connectivity traces (parameters are still synthetic)
 - exercised over ISOXML/ADAPT-shaped records (entities are 5 generic fields)
-- swept across the full 729-cell design (it runs one configuration at a time)
 - model-checked (the I1–I5 invariants are runtime assertions, not TLA+ proofs)
 
 Nothing here uses proprietary code, internal logs, or non-public technical material.
@@ -138,7 +146,7 @@ then compares the result against `simulation/results/raw_runs.csv` on the same c
 
 ```bash
 python3 sweep.py --cells corners --reps 1 --out /tmp/sweep_out
-python3 agreement.py --simulation ../simulation/results/raw_runs.csv
+python3 agreement.py --prototype /tmp/sweep_out --simulation ../simulation/results/raw_runs.csv
 ```
 
 **Do not point `--out` at a OneDrive, Dropbox, or other synced folder.** SQLite cannot
@@ -147,23 +155,6 @@ open its journal there and the server will fail to start. Use a local disk path.
 Throughput is roughly 0.1 s per run with a persistent server, so the full design
 (729 cells x 20 replications x 10 policies = 145,800 runs) is roughly four hours. The full
 sweep is tractable; it just should not be run in a foreground session.
-
-### Result on the 65 corner cells
-
-| Policy | metric | simulation | prototype | diff |
-|---|---|---|---|---|
-| `last_write_wins` | conflicts | 3.785 | 13.523 | +9.738 |
-| `last_write_wins` | high-risk silent overwrites | 1.399 | 5.046 | +3.647 |
-| `domain_aware` | high-risk silent overwrites | 0.000 | 0.000 | 0.000 |
-| `domain_aware` | manual reviews | 1.388 | 4.600 | +3.212 |
-| `manual_review_all` | manual reviews | 3.757 | 12.523 | +8.766 |
-
-Manual-review reduction versus `manual_review_all`: **63.1% simulated, 63.3% measured
-— a 0.2 point gap.** All three of the paper's load-bearing claims agree between model
-and implementation.
-
-(63% rather than the paper's 64.9% because these are the 65 corner cells, not the full
-equally-weighted 729-cell design.)
 
 ### Cross-implementation comparison (prototype vs discrete-event model)
 
@@ -180,7 +171,7 @@ of the paper's load-bearing claims agree between model and implementation.
 
 ### The discrepancy, and a hypothesis that did not survive
 
-Absolute conflict rates are about 4x higher in the prototype. The first explanation
+Absolute conflict rates are **2.41x** higher in the prototype. The first explanation
 proposed was conflict cascades: cloud-side rejections increment the cloud's version
 vector, producing a version other displays have not seen, which then conflicts with the
 next display to sync. That predicts the prototype/simulation ratio should *rise* with
@@ -190,13 +181,21 @@ It was tested. It is wrong.
 
 | factor | ratio at low level | ratio at high level |
 |---|---|---|
-| `fleet_size` 2 → 10 | 5.34x | 3.93x |
-| `sync_interval` 1 → 15 | 5.18x | 3.25x |
-| `connectivity` good → poor | 8.04x | 3.01x |
+| `fleet_size` 2 → 10 | 3.47x | 2.33x |
+| `sync_interval_minutes` 1 → 15 | 2.51x | 2.33x |
+| `connectivity` good → poor | 2.81x | 2.33x |
+| `updates_per_display_day` 2 → 20 | 3.37x | 2.34x |
 
 The ratio *falls* with fleet size, and the excess is largest where connectivity is best,
-syncing most frequent, and the fleet smallest — precisely where contention is lowest.
-Cascades cannot produce that.
+syncing most frequent, update volume lowest and the fleet smallest — precisely where
+contention is lowest. Cascades cannot produce that.
+
+These ratios come from the archived runs in `results/`. Regenerate the full table,
+including the two factors the conflict rate is flat against, with:
+
+```bash
+python agreement.py --prototype results/ --simulation ../simulation/results/raw_runs.csv
+```
 
 The pattern instead points at a detection-semantics difference. In the simulation, a
 cloud-side write lands directly in `cloud_content` and `refresh_stale_for_entity`
