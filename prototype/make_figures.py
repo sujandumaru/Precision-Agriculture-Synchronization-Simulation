@@ -8,6 +8,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+matplotlib.rcParams["pdf.fonttype"] = 42
+matplotlib.rcParams["ps.fonttype"] = 42
+
 ORDER = ["last_write_wins","cloud_preferred","display_preferred",
          "version_vector_causal","version_vector_cloud_wins","version_vector_display_wins",
          "version_vector_random","crdt_field_merge","manual_review_all","domain_aware"]
@@ -18,6 +21,20 @@ LABEL = {"last_write_wins":"Last-write-wins","cloud_preferred":"Cloud-preferred"
          "version_vector_random":"Causal, pseudo-random",
          "crdt_field_merge":"Field-wise register merge","manual_review_all":"Manual-review-all",
          "domain_aware":"Domain-aware"}
+
+def save(fig, out, stem):
+    """Write both a vector PDF and a 600 dpi raster.
+
+    The PDF is the submission copy: as vector line art it has no effective
+    resolution, so it cannot fall below a journal's dpi floor at any placed
+    width. The PNG is kept for previewing and for tools that will not take a
+    PDF, and is byte-identical to the figure embedded in the manuscript.
+    """
+    fig.tight_layout()
+    fig.savefig(f"{out}/{stem}.pdf")
+    fig.savefig(f"{out}/{stem}.png", dpi=600)
+    plt.close(fig)
+
 
 def load(p):
     rows=[]
@@ -35,8 +52,6 @@ def main():
         P[r["policy"]]["mr"].append(float(r["manual_reviews"]))
 
     # ---- Fig 2: protection-burden frontier
-    # coincident policies are grouped into one label; that four policies land on
-    # an identical point is the result, not a plotting nuisance
     pts=[(p,mean(P[p]["mr"]),mean(P[p]["hr"])) for p in ORDER if p in P]
     groups=[]
     for p,x,y in pts:
@@ -67,7 +82,7 @@ def main():
     ax.set_ylabel("High-integrity records discarded per run")
     ax.grid(alpha=0.25,linestyle=":"); ax.set_axisbelow(True)
     ax.set_xlim(-0.9,11.4); ax.set_ylim(-0.85,3.95)
-    fig.tight_layout(); fig.savefig(f"{a.out}/fig2_protection_burden.png",dpi=600); plt.close(fig)
+    save(fig, a.out, "fig2_protection_burden")
 
     # ---- Fig 3: does causal detection help as the entity mix shifts?
     S=defaultdict(lambda: defaultdict(list))
@@ -75,8 +90,6 @@ def main():
         S[r["policy"]][r["high_risk_update_share"]].append(float(r["high_risk_silent_overwrites"]))
     shares=sorted(S["last_write_wins"],key=float)
     fig,ax=plt.subplots(figsize=(7.2,4.4))
-    # last-write-wins is drawn thick so that the version-vector curve, which lies
-    # on top of it at every level, is visibly an overlay rather than a single line
     style={"last_write_wins":("o","-","#2C3E50",4.2,9),
            "version_vector_causal":("s","--","#2E86C1",1.8,7),
            "crdt_field_merge":("^","-.","#28B463",1.8,7),
@@ -91,7 +104,7 @@ def main():
     ax.set_ylabel("High-integrity records discarded per run")
     ax.set_xticks([float(s)*100 for s in shares])
     ax.legend(frameon=False,fontsize=9); ax.grid(alpha=0.25,linestyle=":"); ax.set_axisbelow(True)
-    fig.tight_layout(); fig.savefig(f"{a.out}/fig3_entity_mix.png",dpi=600); plt.close(fig)
+    save(fig, a.out, "fig3_entity_mix")
 
     print("figures written to",a.out)
     for p in ORDER:
